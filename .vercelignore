@@ -1,0 +1,26 @@
+# Caches and logs
+node_modules/.cache
+.next/cache
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+coverage
+playwright-report
+
+# Exclude stray large 3D files at repo root (keep public assets)
+*.glb
+!public/**/*.glb
+
+# Build outputs
+/dist
+/out
+
+# TypeScript
+*.tsbuildinfo
+
