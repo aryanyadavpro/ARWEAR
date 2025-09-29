@@ -26,281 +26,172 @@ export default function TryOnComponent({ product, selectedSize }: TryOnComponent
   const animationRef = useRef<number | null>(null)
   const [isStreaming, setIsStreaming] = useState(false)
   const [cameraRequested, setCameraRequested] = useState(false)
-  const [requestingPermission, setRequestingPermission] = useState(false)
-  const [videoReady, setVideoReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [modelScale, setModelScale] = useState(1)
   const [modelRotation, setModelRotation] = useState(0)
-  const [deviceInfo, setDeviceInfo] = useState({ isMobile: false, isAndroid: false })
   const [performanceStats, setPerformanceStats] = useState({ fps: 0, lastFrameTime: 0 })
+  const [debugInfo, setDebugInfo] = useState<string[]>([])
 
-  // Detect device type
-  useEffect(() => {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-    const isAndroid = /Android/i.test(navigator.userAgent)
-    setDeviceInfo({ isMobile, isAndroid })
-  }, [])
-
-  const getOptimalConstraints = () => {
-    // Start with the most basic constraints that work everywhere
-    const basicConstraints = {
-      audio: false,
-      video: {
-        facingMode: "user"
-      }
-    }
-
-    // Try more specific constraints for desktop
-    if (!deviceInfo.isMobile) {
-      return {
-        audio: false,
-        video: {
-          facingMode: "user",
-          width: { ideal: 640, max: 1280, min: 320 },
-          height: { ideal: 480, max: 960, min: 240 },
-          frameRate: { ideal: 30, max: 60, min: 15 }
-        }
-      }
-    }
-
-    // Mobile gets basic constraints for maximum compatibility
-    return basicConstraints
+  const addDebug = (msg: string) => {
+    console.log(msg)
+    setDebugInfo(prev => [...prev.slice(-5), `${new Date().toLocaleTimeString()}: ${msg}`])
   }
 
   const startCamera = async () => {
-    if (cameraRequested || requestingPermission) return
+    if (cameraRequested) {
+      addDebug("Camera already requested, ignoring")
+      return
+    }
     
-    setRequestingPermission(true)
     setCameraRequested(true)
     setError(null)
-    setVideoReady(false)
+    setIsStreaming(false)
+    setDebugInfo([])
     
     try {
-      // Check if getUserMedia is available
+      addDebug("Checking getUserMedia support...")
+      
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("Camera not supported in this browser")
       }
       
-      // Check for HTTPS or localhost (required for camera access)
-      if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-        throw new Error("Camera access requires HTTPS or localhost")
-      }
+      addDebug("getUserMedia is supported")
       
-      // Stop any existing stream first
+      // Stop any existing stream
       if (streamRef.current) {
+        addDebug("Stopping existing stream")
         streamRef.current.getTracks().forEach(track => track.stop())
+        streamRef.current = null
       }
       
-      const constraints = getOptimalConstraints()
-      console.log('Using camera constraints:', constraints)
+      // Simple constraints that work everywhere
+      const constraints = {
+        audio: false,
+        video: {
+          facingMode: "user"
+        }
+      }
       
-      // Add timeout to prevent infinite loading
-      const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Camera access timeout")), 15000)
-      )
+      addDebug("Requesting camera access...")
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
       
-      const cameraPromise = navigator.mediaDevices.getUserMedia(constraints)
-      
-      // Race between camera access and timeout
-      const stream = await Promise.race([cameraPromise, timeout]) as MediaStream
+      addDebug(`Got stream with ${stream.getVideoTracks().length} video tracks`)
       streamRef.current = stream
       
-      console.log('Stream obtained:', stream.getVideoTracks())
-
-      if (videoRef.current && stream) {
-        // Set up video element event listeners
-        const video = videoRef.current
-        
-        video.onloadedmetadata = () => {
-          console.log('Video metadata loaded:', video.videoWidth, 'x', video.videoHeight)
-          setVideoReady(true)
-        }
-        
-        video.oncanplay = () => {
-          console.log('Video can play')
-          setIsStreaming(true)
-        }
-        
-        video.onplaying = () => {
-          console.log('Video is playing')
-          setIsStreaming(true)
-        }
-        
-        video.onloadstart = () => {
-          console.log('Video load started')
-        }
-        
-        video.onerror = (e) => {
-          console.error('Video error:', e)
-          setError('Video playback error')
-        }
-        
-        // Set video properties for maximum compatibility
-        video.srcObject = stream
-        video.playsInline = true
-        video.muted = true
-        video.autoplay = true
-        video.controls = false
-        video.setAttribute('playsinline', 'true')
-        video.setAttribute('webkit-playsinline', 'true')
-        
-        // Force video to load and play
-        video.load()
-        
-        // Try to play the video
-        try {
-          await video.play()
-          console.log('Video started playing')
-        } catch (playError) {
-          console.error('Video play error:', playError)
-          // Try to play again after a small delay
-          setTimeout(async () => {
-            try {
-              await video.play()
-            } catch (retryError) {
-              console.error('Retry play failed:', retryError)
-              setError('Failed to start video playback')
-            }
-          }, 500)
-        }
-        
-        // Fallback: Force video to start after a delay if it's still not playing
-        setTimeout(() => {
-          if (video.paused && !video.ended) {
-            console.log('Forcing video to play...')
-            video.play().catch(err => console.error('Force play failed:', err))
-          }
-        }, 2000)
+      // Ensure video element exists
+      if (!videoRef.current) {
+        throw new Error("Video element not found")
       }
+      
+      const video = videoRef.current
+      addDebug("Setting video srcObject...")
+      
+      // Set all necessary attributes first
+      video.srcObject = stream
+      video.playsInline = true
+      video.muted = true
+      video.autoplay = true
+      video.setAttribute('playsinline', '')
+      video.setAttribute('webkit-playsinline', '')
+      
+      addDebug("Waiting for loadedmetadata event...")
+      
+      // Wait for metadata with timeout
+      await Promise.race([
+        new Promise<void>((resolve, reject) => {
+          video.onloadedmetadata = () => {
+            addDebug(`Metadata loaded: ${video.videoWidth}x${video.videoHeight}`)
+            resolve()
+          }
+          video.onerror = (e) => {
+            addDebug(`Video error: ${e}`)
+            reject(new Error('Video element error'))
+          }
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Metadata load timeout after 10s')), 10000)
+        )
+      ])
+      
+      addDebug("Attempting to play video...")
+      
+      try {
+        await video.play()
+        addDebug("Video.play() succeeded!")
+      } catch (playErr: any) {
+        addDebug(`Play error: ${playErr.message}, trying user interaction...`)
+        // Sometimes autoplay is blocked, try again
+        setTimeout(() => {
+          video.play()
+            .then(() => addDebug("Delayed play succeeded"))
+            .catch(e => addDebug(`Delayed play failed: ${e.message}`))
+        }, 100)
+      }
+      
+      // Give it a moment to start playing
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // Check if actually playing
+      if (video.paused) {
+        addDebug("Video is paused, forcing play...")
+        await video.play()
+      }
+      
+      addDebug("Camera setup complete!")
+      setIsStreaming(true)
+      
     } catch (err: any) {
-      console.error("Camera access error:", err)
+      addDebug(`Error: ${err.message}`)
+      console.error("Camera error:", err)
+      
       let errorMessage = "Camera access failed. "
       
-      if (err.message === "Camera access timeout") {
-        errorMessage = "Camera access timed out. Please try again."
-      } else if (err.message === "Camera not supported in this browser") {
-        errorMessage = "Camera not supported. Please use Chrome, Safari, or Firefox."
-      } else if (err.name === "NotAllowedError") {
+      if (err.name === "NotAllowedError") {
         errorMessage = "Camera permission denied. Please allow camera access."
       } else if (err.name === "NotFoundError") {
-        errorMessage = "No camera found. Please check your camera connection."
+        errorMessage = "No camera found."
       } else if (err.name === "NotReadableError") {
-        errorMessage = "Camera is in use. Please close other apps using the camera."
-      } else if (err.name === "OverconstrainedError") {
-        errorMessage = "Camera constraints not supported. Trying with basic settings..."
-        // Retry with basic constraints
-        setTimeout(() => retryWithBasicConstraints(), 1000)
-        return
-      } else if (err.message === "Camera access requires HTTPS or localhost") {
-        errorMessage = "Camera access requires HTTPS or localhost. Please use a secure connection."
-      } else if (err.name === "AbortError") {
-        errorMessage = "Camera access was interrupted. Please try again."
-      } else if (err.name === "SecurityError") {
-        errorMessage = "Camera access blocked by security policy. Please check browser settings."
+        errorMessage = "Camera is already in use."
+      } else if (err.message?.includes('timeout')) {
+        errorMessage = "Camera initialization timeout. Please try again."
       } else {
-        errorMessage += err.message || "Unknown error occurred."
+        errorMessage += err.message
       }
       
       setError(errorMessage)
-    } finally {
-      setRequestingPermission(false)
-    }
-  }
-  
-  const retryWithBasicConstraints = async () => {
-    try {
-      setError(null)
-      setRequestingPermission(true)
+      setCameraRequested(false)
       
-      // Progressive fallback constraints - start with absolute basics
-      const fallbackConstraints = [
-        // Absolute minimum - just video
-        { video: true, audio: false },
-        // Just facing mode
-        { video: { facingMode: "user" }, audio: false },
-        // Basic size
-        { video: { facingMode: "user", width: 320 }, audio: false },
-        // Even more basic
-        { video: { width: 320 }, audio: false }
-      ]
-      
-      let stream = null
-      let lastError = null
-      
-      // Try each constraint level
-      for (const constraints of fallbackConstraints) {
-        try {
-          stream = await navigator.mediaDevices.getUserMedia(constraints)
-          console.log('Camera opened with fallback constraints:', constraints)
-          break
-        } catch (err) {
-          lastError = err
-          console.log('Fallback constraint failed:', constraints, err)
-        }
+      // Cleanup on error
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+        streamRef.current = null
       }
-      
-      if (!stream) {
-        throw lastError || new Error('All camera constraints failed')
-      }
-      
-      streamRef.current = stream
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        videoRef.current.onloadedmetadata = () => setVideoReady(true)
-        videoRef.current.oncanplay = () => setIsStreaming(true)
-        await videoRef.current.play()
-      }
-    } catch (retryErr: any) {
-      console.error('All camera fallbacks failed:', retryErr)
-      setError('Unable to access camera. Please check permissions and try again.')
-    } finally {
-      setRequestingPermission(false)
     }
   }
 
   const stopCamera = () => {
-    // Stop animation frame
+    addDebug("Stopping camera...")
+    
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current)
       animationRef.current = null
     }
     
-    // Stop media stream
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => {
-        track.stop()
-        console.log('Stopped track:', track.kind)
-      })
+      streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
     }
     
-    // Reset video element
     if (videoRef.current) {
       videoRef.current.srcObject = null
-      videoRef.current.onloadedmetadata = null
-      videoRef.current.oncanplay = null
-      videoRef.current.onerror = null
     }
     
     setIsStreaming(false)
-    setVideoReady(false)
+    setCameraRequested(false)
   }
 
-  // Cleanup on unmount and handle modal close
   useEffect(() => {
-    const handleEscKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        stopCamera()
-        const modal = document.getElementById('try-on-modal') as HTMLDialogElement
-        modal?.close()
-      }
-    }
-
-    document.addEventListener('keydown', handleEscKey)
-
     return () => {
-      document.removeEventListener('keydown', handleEscKey)
       stopCamera()
     }
   }, [])
@@ -308,167 +199,215 @@ export default function TryOnComponent({ product, selectedSize }: TryOnComponent
   const drawModelOverlay = () => {
     const canvas = canvasRef.current
     const video = videoRef.current
-    if (!canvas || !video || !isStreaming || !videoReady) {
-      return
-    }
+    
+    if (!canvas || !video || !isStreaming) return
 
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    // Check if video has valid dimensions
-    if (video.videoWidth === 0 || video.videoHeight === 0) {
-      return
+    if (video.videoWidth === 0 || video.videoHeight === 0) return
+
+    // Match canvas to video size
+    if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
     }
 
-    // Set canvas size to match display dimensions for better performance
-    const rect = canvas.getBoundingClientRect()
-    const displayWidth = Math.floor(rect.width)
-    const displayHeight = Math.floor(rect.height)
-    
-    if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
-      canvas.width = displayWidth
-      canvas.height = displayHeight
-      console.log('Canvas resized to display size:', canvas.width, 'x', canvas.height)
-    }
-
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    try {
-      // Draw video frame scaled to canvas size
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-    } catch (drawError) {
-      console.warn('Failed to draw video frame:', drawError)
-      return
-    }
-
-    // Calculate model position based on body parts
     const centerX = canvas.width / 2
     const centerY = canvas.height / 2
 
-    // Draw 3D model overlay (enhanced visual representation)
     ctx.save()
-    
-    // Apply rotation transform
     ctx.translate(centerX, centerY)
     ctx.rotate((modelRotation * Math.PI) / 180)
     ctx.translate(-centerX, -centerY)
 
     if (product.category === "shirt") {
-      // Draw shirt overlay on upper body with gradient and shadows
-      const shirtWidth = canvas.width * 0.4 * modelScale
-      const shirtHeight = canvas.height * 0.5 * modelScale
+      // More realistic shirt proportions
+      const shirtWidth = canvas.width * 0.5 * modelScale
+      const shirtHeight = canvas.height * 0.45 * modelScale
       const shirtX = centerX - shirtWidth / 2
-      const shirtY = centerY - shirtHeight * 0.4
+      const shirtY = canvas.height * 0.15 // Position at upper body
 
-      // Create gradient for shirt
+      // Create gradient for depth
       const gradient = ctx.createLinearGradient(shirtX, shirtY, shirtX + shirtWidth, shirtY + shirtHeight)
-      gradient.addColorStop(0, '#3b82f6')
-      gradient.addColorStop(1, '#1e40af')
+      gradient.addColorStop(0, 'rgba(59, 130, 246, 0.75)')
+      gradient.addColorStop(0.5, 'rgba(37, 99, 235, 0.8)')
+      gradient.addColorStop(1, 'rgba(30, 64, 175, 0.75)')
 
-      // Draw shadow first
-      ctx.globalAlpha = 0.3
-      ctx.fillStyle = "black"
-      ctx.fillRect(shirtX + 5, shirtY + 5, shirtWidth, shirtHeight)
-
-      // Draw main shirt body
-      ctx.globalAlpha = 0.8
+      // Main shirt body with rounded corners
+      ctx.globalAlpha = 0.85
       ctx.fillStyle = gradient
-      ctx.fillRect(shirtX, shirtY, shirtWidth, shirtHeight)
+      ctx.beginPath()
+      ctx.roundRect(shirtX, shirtY, shirtWidth, shirtHeight, 8)
+      ctx.fill()
 
-      // Shirt sleeves with rounded ends
-      const sleeveWidth = shirtWidth * 0.25
-      const sleeveHeight = shirtHeight * 0.7
-      ctx.fillRect(shirtX - sleeveWidth, shirtY + shirtHeight * 0.1, sleeveWidth, sleeveHeight)
-      ctx.fillRect(shirtX + shirtWidth, shirtY + shirtHeight * 0.1, sleeveWidth, sleeveHeight)
-
-      // Shirt collar with highlighting
-      ctx.globalAlpha = 0.9
-      ctx.fillStyle = "#1e40af"
-      ctx.fillRect(shirtX + shirtWidth * 0.25, shirtY, shirtWidth * 0.5, shirtHeight * 0.15)
+      // Sleeves - more natural proportions
+      const sleeveWidth = shirtWidth * 0.22
+      const sleeveHeight = shirtHeight * 0.65
+      const sleeveY = shirtY + shirtHeight * 0.05
       
-      // Add buttons
+      // Left sleeve
+      ctx.beginPath()
+      ctx.roundRect(shirtX - sleeveWidth * 0.8, sleeveY, sleeveWidth, sleeveHeight, 6)
+      ctx.fill()
+      
+      // Right sleeve
+      ctx.beginPath()
+      ctx.roundRect(shirtX + shirtWidth - sleeveWidth * 0.2, sleeveY, sleeveWidth, sleeveHeight, 6)
+      ctx.fill()
+
+      // Collar with better styling
+      ctx.globalAlpha = 0.9
+      ctx.fillStyle = "rgba(30, 64, 175, 0.9)"
+      const collarWidth = shirtWidth * 0.4
+      const collarHeight = shirtHeight * 0.12
+      ctx.beginPath()
+      ctx.roundRect(centerX - collarWidth / 2, shirtY, collarWidth, collarHeight, 4)
+      ctx.fill()
+      
+      // V-neck detail
+      ctx.beginPath()
+      ctx.moveTo(centerX, shirtY)
+      ctx.lineTo(centerX - collarWidth * 0.3, shirtY + collarHeight)
+      ctx.lineTo(centerX + collarWidth * 0.3, shirtY + collarHeight)
+      ctx.closePath()
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)"
+      ctx.fill()
+      
+      // Buttons
       ctx.fillStyle = "white"
       ctx.globalAlpha = 1.0
-      for (let i = 0; i < 3; i++) {
-        const buttonY = shirtY + shirtHeight * (0.2 + i * 0.2)
+      const buttonCount = 4
+      for (let i = 0; i < buttonCount; i++) {
+        const buttonY = shirtY + collarHeight + (shirtHeight - collarHeight) * (i / (buttonCount - 1)) * 0.8
         ctx.beginPath()
-        ctx.arc(centerX, buttonY, 3, 0, 2 * Math.PI)
+        ctx.arc(centerX, buttonY, 4, 0, 2 * Math.PI)
         ctx.fill()
+        
+        // Button holes
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.3)"
+        ctx.lineWidth = 1
+        ctx.stroke()
       }
 
-    } else if (product.category === "pants") {
-      // Draw pants overlay on lower body with improved styling
-      const pantsWidth = canvas.width * 0.35 * modelScale
-      const pantsHeight = canvas.height * 0.6 * modelScale
-      const pantsX = centerX - pantsWidth / 2
-      const pantsY = centerY
-
-      // Create gradient for pants
-      const gradient = ctx.createLinearGradient(pantsX, pantsY, pantsX, pantsY + pantsHeight)
-      gradient.addColorStop(0, '#8b5cf6')
-      gradient.addColorStop(1, '#6d28d9')
-
-      // Draw shadow
+      // Add some seam lines for realism
       ctx.globalAlpha = 0.3
-      ctx.fillStyle = "black"
-      ctx.fillRect(pantsX + 3, pantsY + 3, pantsWidth, pantsHeight * 0.4)
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(centerX, shirtY + collarHeight)
+      ctx.lineTo(centerX, shirtY + shirtHeight)
+      ctx.stroke()
 
-      // Pants waist
-      ctx.globalAlpha = 0.8
-      ctx.fillStyle = gradient
-      ctx.fillRect(pantsX, pantsY, pantsWidth, pantsHeight * 0.4)
+    } else if (product.category === "pants") {
+      // More realistic pants proportions
+      const pantsWidth = canvas.width * 0.45 * modelScale
+      const pantsHeight = canvas.height * 0.55 * modelScale
+      const pantsX = centerX - pantsWidth / 2
+      const pantsY = canvas.height * 0.4 // Position at lower body
 
-      // Pants legs with improved proportions
-      const legWidth = pantsWidth * 0.45
-      const legHeight = pantsHeight * 0.7
-      const legY = pantsY + pantsHeight * 0.25
-      
-      ctx.fillRect(pantsX + pantsWidth * 0.02, legY, legWidth, legHeight)
-      ctx.fillRect(pantsX + pantsWidth * 0.53, legY, legWidth, legHeight)
-      
-      // Add belt
-      ctx.fillStyle = "#8b4513"
+      // Create gradient
+      const gradient = ctx.createLinearGradient(pantsX, pantsY, pantsX, pantsY + pantsHeight)
+      gradient.addColorStop(0, 'rgba(139, 92, 246, 0.8)')
+      gradient.addColorStop(0.5, 'rgba(124, 58, 237, 0.85)')
+      gradient.addColorStop(1, 'rgba(109, 40, 217, 0.8)')
+
+      // Waist/belt area
+      const waistHeight = pantsHeight * 0.08
       ctx.globalAlpha = 0.9
-      ctx.fillRect(pantsX, pantsY, pantsWidth, pantsHeight * 0.05)
+      ctx.fillStyle = "rgba(139, 69, 19, 0.9)"
+      ctx.beginPath()
+      ctx.roundRect(pantsX, pantsY, pantsWidth, waistHeight, 4)
+      ctx.fill()
+
+      // Belt buckle
+      ctx.fillStyle = "rgba(192, 192, 192, 0.9)"
+      ctx.beginPath()
+      ctx.roundRect(centerX - 8, pantsY + waistHeight * 0.2, 16, waistHeight * 0.6, 2)
+      ctx.fill()
+
+      // Main pants body
+      ctx.globalAlpha = 0.85
+      ctx.fillStyle = gradient
+      
+      // Pants legs - more natural shape
+      const legGap = pantsWidth * 0.05
+      const legWidth = (pantsWidth - legGap) / 2
+      const legHeight = pantsHeight * 0.85
+      const legY = pantsY + waistHeight
+      
+      // Left leg with taper
+      ctx.beginPath()
+      ctx.moveTo(pantsX, legY)
+      ctx.lineTo(pantsX + legWidth * 0.95, legY)
+      ctx.lineTo(pantsX + legWidth * 0.85, legY + legHeight)
+      ctx.lineTo(pantsX + legWidth * 0.1, legY + legHeight)
+      ctx.closePath()
+      ctx.fill()
+      
+      // Right leg with taper
+      ctx.beginPath()
+      ctx.moveTo(pantsX + legWidth + legGap, legY)
+      ctx.lineTo(pantsX + pantsWidth, legY)
+      ctx.lineTo(pantsX + pantsWidth - legWidth * 0.1, legY + legHeight)
+      ctx.lineTo(pantsX + legWidth + legGap + legWidth * 0.15, legY + legHeight)
+      ctx.closePath()
+      ctx.fill()
+
+      // Seam lines
+      ctx.globalAlpha = 0.4
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"
+      ctx.lineWidth = 2
+      
+      // Center seam
+      ctx.beginPath()
+      ctx.moveTo(centerX, pantsY + waistHeight)
+      ctx.lineTo(centerX, legY + legHeight * 0.3)
+      ctx.stroke()
+      
+      // Pocket outlines
+      const pocketSize = pantsWidth * 0.15
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.3)"
+      ctx.lineWidth = 1
+      // Left pocket
+      ctx.strokeRect(pantsX + legWidth * 0.2, pantsY + waistHeight * 1.5, pocketSize, pocketSize * 0.8)
+      // Right pocket
+      ctx.strokeRect(pantsX + pantsWidth - legWidth * 0.2 - pocketSize, pantsY + waistHeight * 1.5, pocketSize, pocketSize * 0.8)
     }
 
     ctx.restore()
 
-    // Draw size indicator
     if (selectedSize) {
       ctx.fillStyle = "white"
       ctx.font = "16px Arial"
       ctx.fillText(`Size: ${selectedSize}`, 10, 30)
     }
 
-    // Draw model controls and performance info
     ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
-    ctx.fillRect(10, canvas.height - 80, 250, 70)
+    ctx.fillRect(10, canvas.height - 60, 200, 50)
     ctx.fillStyle = "white"
     ctx.font = "12px Arial"
-    ctx.fillText(`Scale: ${modelScale.toFixed(1)}`, 15, canvas.height - 60)
-    ctx.fillText(`Rotation: ${modelRotation}°`, 15, canvas.height - 45)
-    ctx.fillText(`FPS: ${performanceStats.fps}`, 15, canvas.height - 30)
-    ctx.fillText(`Quality: ${performanceStats.fps > 25 ? 'Good' : performanceStats.fps > 15 ? 'Fair' : 'Poor'}`, 15, canvas.height - 15)
+    ctx.fillText(`Scale: ${modelScale.toFixed(1)}`, 15, canvas.height - 40)
+    ctx.fillText(`Rotation: ${modelRotation}°`, 15, canvas.height - 25)
+    ctx.fillText(`FPS: ${performanceStats.fps}`, 15, canvas.height - 10)
   }
 
   useEffect(() => {
     if (!isStreaming) return
 
     let frameCount = 0
-    let lastFpsUpdate = window.performance.now()
+    let lastFpsUpdate = performance.now()
     
-    // Use requestAnimationFrame for smooth rendering with FPS monitoring
     const animate = () => {
-      const now = window.performance.now()
+      const now = performance.now()
       drawModelOverlay()
       
-      // Calculate FPS every second
       frameCount++
       if (now - lastFpsUpdate >= 1000) {
         const fps = Math.round((frameCount * 1000) / (now - lastFpsUpdate))
-        setPerformanceStats(prev => ({ ...prev, fps, lastFrameTime: now }))
+        setPerformanceStats({ fps, lastFrameTime: now })
         frameCount = 0
         lastFpsUpdate = now
       }
@@ -481,10 +420,9 @@ export default function TryOnComponent({ product, selectedSize }: TryOnComponent
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)
-        animationRef.current = null
       }
     }
-  }, [isStreaming, modelScale, modelRotation, product.category, selectedSize, videoReady])
+  }, [isStreaming, modelScale, modelRotation, product.category, selectedSize])
 
   const adjustScale = (delta: number) => {
     setModelScale(prev => Math.max(0.5, Math.min(2, prev + delta)))
@@ -494,7 +432,6 @@ export default function TryOnComponent({ product, selectedSize }: TryOnComponent
     setModelRotation(prev => (prev + delta) % 360)
   }
 
-  // Initial state - show start button
   if (!cameraRequested && !error) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -508,34 +445,7 @@ export default function TryOnComponent({ product, selectedSize }: TryOnComponent
           >
             Start Camera
           </button>
-          <p className="text-xs text-slate-400 mt-2">We'll ask for camera permission to begin</p>
-          <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded text-sm">
-            <p className="text-blue-400 font-medium">Device Info:</p>
-            <p className="text-blue-300 text-xs">
-              Mobile: {deviceInfo.isMobile ? 'Yes' : 'No'} | 
-              Android: {deviceInfo.isAndroid ? 'Yes' : 'No'} | 
-              Protocol: {location.protocol}
-            </p>
-          </div>
-          {!deviceInfo.isMobile && (
-            <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded text-sm">
-              <p className="text-yellow-400 font-medium">Best Experience:</p>
-              <p className="text-yellow-300">For optimal results, use a mobile device with good lighting</p>
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  // Requesting permission state
-  if (requestingPermission) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-slate-300">Requesting camera permission...</p>
-          <p className="text-sm text-slate-400 mt-2">Please allow camera access to use the virtual try-on feature</p>
+          <p className="text-xs text-slate-400 mt-2">We'll ask for camera permission</p>
         </div>
       </div>
     )
@@ -546,61 +456,27 @@ export default function TryOnComponent({ product, selectedSize }: TryOnComponent
       <div className="flex items-center justify-center h-96">
         <div className="text-center max-w-md">
           <div className="text-red-500 text-6xl mb-4">📷</div>
-          <h3 className="text-lg font-semibold text-white mb-2">Camera Access Required</h3>
+          <h3 className="text-lg font-semibold text-white mb-2">Camera Access Issue</h3>
           <p className="text-slate-300 mb-4">{error}</p>
-          <div className="space-y-2">
-            <button
-              onClick={() => {
-                setError(null)
-                setCameraRequested(false)
-                startCamera()
-              }}
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded hover:from-blue-700 hover:to-purple-700 mr-2"
-            >
-              Try Again
-            </button>
-            <button
-              onClick={() => {
-                const modal = document.getElementById('try-on-modal') as HTMLDialogElement
-                modal?.close()
-              }}
-              className="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700"
-            >
-              Close
-            </button>
-          </div>
-          <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded text-sm text-left">
-            <p className="font-medium text-yellow-400">Troubleshooting:</p>
-            <ul className="text-yellow-300 mt-1 space-y-1">
-              <li>• Check browser permissions for camera access</li>
-              <li>• Make sure you're using HTTPS or localhost</li>
-              <li>• Try a different browser if the issue persists</li>
-              <li>• Ensure no other apps are using the camera</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Camera requested but not streaming yet
-  if (cameraRequested && !isStreaming && !error) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-slate-300">Starting camera...</p>
-          <p className="text-sm text-slate-400 mt-2">Please wait while we initialize your camera</p>
           <button
             onClick={() => {
-              stopCamera()
-              setCameraRequested(false)
               setError(null)
+              setCameraRequested(false)
+              startCamera()
             }}
-            className="mt-4 px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700 text-sm"
+            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded hover:from-blue-700 hover:to-purple-700"
           >
-            Cancel
+            Try Again
           </button>
+          
+          {debugInfo.length > 0 && (
+            <div className="mt-4 p-3 bg-slate-800 border border-slate-600 rounded text-xs text-left">
+              <p className="font-bold text-slate-300 mb-1">Debug Log:</p>
+              {debugInfo.map((log, i) => (
+                <div key={i} className="text-slate-400 font-mono">{log}</div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     )
@@ -608,7 +484,6 @@ export default function TryOnComponent({ product, selectedSize }: TryOnComponent
 
   return (
     <div className="space-y-4">
-      {/* Camera View */}
       <div className="relative w-full max-w-2xl mx-auto">
         <div className="relative aspect-video border rounded-lg overflow-hidden bg-black">
           <video
@@ -618,87 +493,107 @@ export default function TryOnComponent({ product, selectedSize }: TryOnComponent
             muted
             autoPlay
             style={{ 
-              transform: 'scaleX(-1)', // Mirror the video for natural feel
+              transform: 'scaleX(-1)',
               zIndex: 1
             }}
           />
+          
           <canvas
             ref={canvasRef}
             className="absolute inset-0 w-full h-full"
-            style={{ pointerEvents: "none" }}
+            style={{ 
+              pointerEvents: "none",
+              transform: 'scaleX(-1)',
+              zIndex: 2
+            }}
           />
           
-          {/* Overlay Instructions */}
-          <div className="absolute top-4 left-4 bg-black/70 text-white p-2 rounded text-sm">
-            <p>Position yourself in the center</p>
+          {!isStreaming && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/60 z-10">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+              <p className="text-slate-300">Starting camera...</p>
+              {debugInfo.length > 0 && (
+                <div className="mt-4 p-3 bg-slate-800/80 border border-slate-600 rounded text-xs max-w-md">
+                  <p className="font-bold text-slate-300 mb-1">Debug:</p>
+                  {debugInfo.slice(-3).map((log, i) => (
+                    <div key={i} className="text-slate-400 font-mono text-[10px]">{log}</div>
+                  ))}
+                </div>
+              )}
+              <button
+                onClick={stopCamera}
+                className="mt-2 px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700 text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+          
+          <div className="absolute top-4 left-4 bg-black/70 text-white p-2 rounded text-sm z-20">
+            <p>Position yourself in center</p>
             <p>Size: {selectedSize || "Select size"}</p>
-            <p className="text-green-400">Camera: {isStreaming ? "Active" : "Loading..."}</p>
+            <p className={isStreaming ? "text-green-400" : "text-yellow-400"}>
+              Camera: {isStreaming ? "Active" : "Loading..."}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Controls */}
       <div className="flex flex-wrap gap-4 justify-center">
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => adjustScale(-0.1)}
-            className="px-3 py-1 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 hover:text-white transition-colors"
-          >
-            -
-          </button>
+          <button onClick={() => adjustScale(-0.1)} className="px-3 py-1 bg-slate-700 text-slate-300 rounded hover:bg-slate-600">-</button>
           <span className="text-sm text-slate-300">Scale</span>
-          <button
-            onClick={() => adjustScale(0.1)}
-            className="px-3 py-1 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 hover:text-white transition-colors"
-          >
-            +
-          </button>
+          <button onClick={() => adjustScale(0.1)} className="px-3 py-1 bg-slate-700 text-slate-300 rounded hover:bg-slate-600">+</button>
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => adjustRotation(-15)}
-            className="px-3 py-1 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 hover:text-white transition-colors"
-          >
-            ↺
-          </button>
+          <button onClick={() => adjustRotation(-15)} className="px-3 py-1 bg-slate-700 text-slate-300 rounded hover:bg-slate-600">↺</button>
           <span className="text-sm text-slate-300">Rotate</span>
-          <button
-            onClick={() => adjustRotation(15)}
-            className="px-3 py-1 bg-slate-700 text-slate-300 rounded hover:bg-slate-600 hover:text-white transition-colors"
-          >
-            ↻
-          </button>
+          <button onClick={() => adjustRotation(15)} className="px-3 py-1 bg-slate-700 text-slate-300 rounded hover:bg-slate-600">↻</button>
         </div>
 
         <button
           onClick={() => {
-            const canvas = canvasRef.current
-            if (canvas) {
-              const link = document.createElement('a')
-              link.download = `try-on-${product.title}.png`
-              link.href = canvas.toDataURL()
-              link.click()
+            const video = videoRef.current
+            const canvas = document.createElement('canvas')
+            if (video && video.videoWidth > 0) {
+              canvas.width = video.videoWidth
+              canvas.height = video.videoHeight
+              const ctx = canvas.getContext('2d')
+              if (ctx) {
+                ctx.save()
+                ctx.scale(-1, 1)
+                ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height)
+                ctx.restore()
+                
+                const overlayCanvas = canvasRef.current
+                if (overlayCanvas) {
+                  ctx.save()
+                  ctx.scale(-1, 1)
+                  ctx.drawImage(overlayCanvas, -canvas.width, 0, canvas.width, canvas.height)
+                  ctx.restore()
+                }
+                
+                const link = document.createElement('a')
+                link.download = `try-on-${product.title}.png`
+                link.href = canvas.toDataURL()
+                link.click()
+              }
             }
           }}
-          className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded hover:from-green-700 hover:to-emerald-700 font-medium shadow-lg"
+          className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded hover:from-green-700 hover:to-emerald-700"
         >
           📸 Capture
         </button>
         
         <button
-          onClick={() => {
-            stopCamera()
-            setCameraRequested(false)
-            setError(null)
-          }}
-          className="px-4 py-2 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded hover:from-red-700 hover:to-rose-700 font-medium shadow-lg"
+          onClick={stopCamera}
+          className="px-4 py-2 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded hover:from-red-700 hover:to-rose-700"
         >
           🚫 Stop Camera
         </button>
       </div>
 
-      {/* Instructions */}
       <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/50 backdrop-blur border border-slate-600 rounded-lg p-4">
         <h4 className="font-semibold text-blue-400 mb-2">Try On Instructions:</h4>
         <ul className="text-sm text-slate-300 space-y-1">
@@ -711,4 +606,3 @@ export default function TryOnComponent({ product, selectedSize }: TryOnComponent
     </div>
   )
 }
-

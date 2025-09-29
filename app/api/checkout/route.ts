@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { stripe } from "@/lib/stripe"
+import { convertUsdCentsToInrPaise } from "@/lib/utils"
 
 export async function POST(req: Request) {
   try {
@@ -14,9 +15,9 @@ export async function POST(req: Request) {
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/cart`,
       line_items: items.map((it) => ({
         price_data: {
-          currency: "usd",
+          currency: "inr",
           product_data: { name: `${it.title} (${it.size})` },
-          unit_amount: it.priceCents,
+          unit_amount: convertUsdCentsToInrPaise(it.priceCents),
         },
         quantity: it.qty,
       })),

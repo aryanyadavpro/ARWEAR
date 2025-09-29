@@ -3,6 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { formatInrFromUsdCents } from "@/lib/utils"
 import { useCartStore } from "@/store/cart-store"
 
 export default function CartPage() {
@@ -34,7 +35,7 @@ export default function CartPage() {
                 <p className="font-medium">{it.title}</p>
                 <p className="text-sm text-muted-foreground">Size: {it.size}</p>
               </div>
-              <div className="w-24 text-right">${(it.priceCents / 100).toFixed(2)}</div>
+              <div className="w-40 text-right">{formatInrFromUsdCents(it.priceCents)}</div>
               <Button
                 variant="destructive"
                 onClick={() => remove(it.productId, it.size)}
@@ -46,7 +47,7 @@ export default function CartPage() {
           ))}
           <div className="flex items-center justify-between pt-4 border-t">
             <p className="text-lg font-medium">Total</p>
-            <p className="text-lg font-semibold">${(totalCents / 100).toFixed(2)}</p>
+            <p className="text-lg font-semibold">{formatInrFromUsdCents(totalCents)}</p>
           </div>
           <div className="flex justify-end">
             <Button asChild>

@@ -2,6 +2,7 @@
 "use client"
 
 import Link from "next/link"
+import { formatInrFromUsdCents } from "@/lib/utils"
 import { useEffect, useRef, useState } from "react"
 
 export default function ProductCard({
@@ -68,7 +69,7 @@ export default function ProductCard({
           <h3 className="font-semibold text-white mb-2 text-lg">{product.title}</h3>
           <div className="flex items-center justify-between">
             <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-              ${(product.priceCents / 100).toFixed(2)}
+              {formatInrFromUsdCents(product.priceCents)}
             </p>
             <div className="flex gap-1.5">
               {product.sizes.slice(0, 3).map((size) => (
