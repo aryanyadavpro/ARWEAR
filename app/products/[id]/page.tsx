@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { formatInrFromUsdCents } from "@/lib/utils"
 import { useCartStore } from "@/store/cart-store"
 import { seedProducts } from "@/data/seed-products"
 import dynamic from "next/dynamic"
@@ -50,7 +51,7 @@ export default function ProductDetailPage() {
           
           <div className="mt-6 flex items-center gap-6">
             <div>
-              <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">${(product.priceCents / 100).toFixed(2)}</span>
+              <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">{formatInrFromUsdCents(product.priceCents)}</span>
               <span className="text-sm text-slate-400 ml-2">Free shipping</span>
             </div>
             <div className="flex items-center gap-2">
@@ -97,7 +98,7 @@ export default function ProductDetailPage() {
               aria-disabled={!selectedSize}
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 text-lg shadow-lg"
             >
-              {!selectedSize ? "Select size to add to cart" : "Add to cart - $" + (product.priceCents / 100).toFixed(2)}
+              {!selectedSize ? "Select size to add to cart" : `Add to cart - ${formatInrFromUsdCents(product.priceCents)}`}
             </Button>
             
             <div className="flex gap-3">

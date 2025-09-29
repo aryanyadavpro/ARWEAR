@@ -13,14 +13,15 @@ type Props = {
 
 export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
   const viewerRef = useRef<ModelViewerElement | null>(null)
+  const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
 
   const handleScale = (factor: "increase" | "decrease") => {
     if (!viewerRef.current) return
     const currentScale = parseFloat(viewerRef.current.scale.split(" ")[0])
     const nextScale =
       factor === "increase"
-        ? Math.min(1.5, currentScale + 0.1)
-        : Math.max(0.1, currentScale - 0.1)
+        ? Math.min(0.6, currentScale + 0.05)
+        : Math.max(0.05, currentScale - 0.05)
     viewerRef.current.scale = `${nextScale} ${nextScale} ${nextScale}`
   }
 
@@ -41,8 +42,14 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
         throw new Error('AR requires HTTPS or localhost')
       }
 
-      // Check WebXR support first
-      if ('xr' in navigator && 'XRSystem' in window) {
+      // Prefer Android Scene Viewer when on Android
+      if (isAndroid && viewerRef.current?.canActivateAR) {
+        await viewerRef.current.activateAR()
+        return
+      }
+
+      // Check WebXR support first (for browsers with WebXR AR)
+      if ('xr' in navigator && 'XRSystem' in window && !isAndroid) {
         const xr = navigator.xr as any
         const isSupported = await xr.isSessionSupported('immersive-ar')
         if (!isSupported) {
@@ -55,7 +62,7 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
         throw new Error('Model viewer AR not available')
       }
       
-      // Attempt to activate AR
+      // Attempt to activate AR (will route to Scene Viewer on Android or WebXR/Quick Look otherwise)
       await viewerRef.current.activateAR()
       
     } catch (error: any) {
@@ -97,6 +104,14 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
       
       // Create a more user-friendly error display
       const fullMessage = `${errorMessage}\n\nTroubleshooting:\n${instructions.join('\n')}`
+      if (isAndroid) {
+        // Fallback to Android Scene Viewer intent if available
+        const intentUrl = `intent://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(glbUrl)}&mode=ar_only#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(location.href)};end;`
+        try {
+          location.href = intentUrl
+          return
+        } catch {}
+      }
       alert(fullMessage)
     }
   }
@@ -111,7 +126,7 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
         ar
         ar-modes="webxr scene-viewer quick-look"
         ar-placement="floor"
-        ar-scale="0.3 0.3 0.3"
+        ar-scale="0.1 0.1 0.1"
         ar-persist="true"
         camera-controls
         camera-orbit="0deg 75deg 105%"
@@ -122,7 +137,7 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
         interaction-policy="allow-when-focused"
         loading="eager"
         reveal="auto"
-        scale="0.3 0.3 0.3"
+        scale="0.1 0.1 0.1"
         style={{
           width: "100%",
           height: "420px",
@@ -157,13 +172,7 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
           Rotate
         </button>
 
-        <button
-          className="px-4 py-2 rounded-md border bg-primary text-primary-foreground font-medium"
-          onClick={activateAR}
-          aria-label="View in your space"
-        >
-          View in your space
-        </button>
+        {/* Removed "View in your space" button */}
       </div>
 
       {/* AR Instructions */}
