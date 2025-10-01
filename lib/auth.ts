@@ -1,7 +1,5 @@
 import jwt from 'jsonwebtoken'
 import { NextRequest } from 'next/server'
-import connectDB from './mongodb'
-import User from '@/models/User'
 
 export interface AuthUser {
   userId: string
@@ -41,10 +39,16 @@ export async function getAuthUser(request: NextRequest): Promise<AuthUser | null
   }
 }
 
+// Lazy-load DB modules to avoid build-time import of Mongo connection
 export async function getUserFromToken(token: string) {
   try {
     const decoded = await verifyToken(token)
     if (!decoded) return null
+
+    const [{ default: connectDB }, { default: User }] = await Promise.all([
+      import('./mongodb'),
+      import('@/models/User')
+    ])
 
     await connectDB()
     const user = await User.findById(decoded.userId).select('-password')

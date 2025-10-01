@@ -2,6 +2,10 @@
   "name": "my-v0-project",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@8.15.8",
+  "pnpm": {
+    "allowedBuiltDependencies": ["@tailwindcss/oxide"]
+  },
   "scripts": {
     "build": "next build",
     "dev": "next dev -H 0.0.0.0",
