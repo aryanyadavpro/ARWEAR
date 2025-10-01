@@ -1,18 +1,8 @@
-import { redirect } from "next/navigation"
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
-import AccountClient from "./section-client"
-
-export default async function AccountPage() {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, {
-    cookies: { get: (name) => cookieStore.get(name)?.value },
-  })
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    redirect("/sign-in")
-  }
-  return <AccountClient userEmail={user.email ?? ""} />
+export default function AccountPage() {
+  return (
+    <div className="mx-auto max-w-md px-4 py-8">
+      <h1 className="text-2xl font-semibold">Account</h1>
+      <p className="mt-4 text-gray-600">User account management will be implemented with MongoDB.</p>
+    </div>
+  )
 }

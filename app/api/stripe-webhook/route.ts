@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { stripe } from "@/lib/stripe"
-import { createServerClient } from "@supabase/ssr"
 
 export async function POST(req: Request) {
   const sig = req.headers.get("stripe-signature") || ""
@@ -15,25 +14,8 @@ export async function POST(req: Request) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        cookies: {
-          getAll: () => [],
-          setAll: () => {},
-        },
-      }
-    )
-    const items = JSON.parse(session.metadata?.items || "[]")
-
-    await supabase.from("orders").insert({
-      user_email: session.customer_details?.email || null,
-      items,
-      amount_total: session.amount_total,
-      status: "paid",
-      stripe_session_id: session.id,
-    })
+    // TODO: Save order to MongoDB
+    console.log("Order completed:", session.id)
   }
 
   return NextResponse.json({ received: true })

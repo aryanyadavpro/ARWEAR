@@ -3,8 +3,8 @@
 Modern e-commerce demo with:
 - AR “View at your home” via <model-viewer> (plus 3D fallback)
 - CV-based Try-On skeleton using camera overlay and throttling (on-device)
-- Supabase Auth + Postgres + Storage
-- Stripe Checkout (test) + webhook -> Supabase orders
+- MongoDB integration (planned)
+- Stripe Checkout (test) + webhook
 - Admin dashboard for products and model metadata
 
 Note: This demo uses Next.js App Router to run smoothly in v0 Preview (instead of Vite/react-router). The architecture matches the requested stack conceptually.
@@ -12,22 +12,17 @@ Note: This demo uses Next.js App Router to run smoothly in v0 Preview (instead o
 ## Quick Start
 
 1) Environment
-- Duplicate .env.example to your project Settings in v0 (Environment Variables) or your deployment:
-  - NEXT_PUBLIC_SUPABASE_URL
-  - NEXT_PUBLIC_SUPABASE_ANON_KEY
-  - SUPABASE_SERVICE_ROLE_KEY
+- Environment variables for future MongoDB integration:
+  - MONGODB_URI (to be added)
+  - JWT_SECRET (to be added)
   - NEXT_PUBLIC_STRIPE_PUBLIC_KEY
   - STRIPE_SECRET_KEY
   - STRIPE_WEBHOOK_SECRET
   - NEXT_PUBLIC_SITE_URL
-  - NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL (optional for sign-up redirect)
 
-2) Supabase
-- Connect Supabase integration in v0 Project Settings (no dashboard needed).
-- Run SQL scripts in scripts/ folder (001_schema.sql, 002_seed.sql) using v0 scripts runner or Supabase migration.
-- Create Storage buckets:
-  - models (public read), previews (public read)
-  - Set Storage policies to allow public read and admin-authenticated write.
+2) MongoDB (Future Implementation)
+- MongoDB integration will be added for data storage and authentication
+- File storage solution for models and images will be implemented
 
 3) Stripe (test mode)
 - Get test keys from Stripe and set env vars.
@@ -150,11 +145,12 @@ ARWEAR-main/
   - Save anchor JSON in models_meta.
 - Role check expects a public.users row with role='admin' and users.auth_user_id=auth.uid().
 
-## Data Models & Policies
-- See scripts/001_schema.sql for:
-  - users, products, models_meta, orders, admin_logs
-  - RLS: read-only products for public; admins can write; user orders readable by email.
-- Seed data: scripts/002_seed.sql for 5 products.
+## Data Models (Future Implementation)
+- MongoDB collections will include:
+  - users: Authentication and role management
+  - products: Product catalog with model references
+  - models_meta: 3D model metadata and anchor points
+  - orders: Order tracking and history
 
 ## Blender to Draco GLB
 - Export GLTF Binary (.glb) in Blender:
