@@ -38,20 +38,27 @@ export default function SignInPage() {
     }
 
     try {
-      // TODO: Replace with actual MongoDB authentication API call
-      console.log("Login data:", {
-        email: formData.email,
-        password: formData.password
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        }),
       })
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // For now, just show success and redirect
-      alert("Login successful! (MongoDB integration pending)")
-      router.push("/account")
-    } catch (err) {
-      setError("Login failed. Please check your credentials.")
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed')
+      }
+
+      // Login successful, redirect to product page
+      router.push('/product')
+    } catch (err: any) {
+      setError(err.message || "Login failed. Please check your credentials.")
     } finally {
       setLoading(false)
     }

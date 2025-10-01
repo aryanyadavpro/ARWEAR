@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: ""
@@ -33,7 +34,7 @@ export default function SignUpPage() {
     setLoading(true)
 
     // Basic validation
-    if (!formData.name || !formData.email || !formData.password) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       setError("All fields are required")
       setLoading(false)
       return
@@ -52,21 +53,29 @@ export default function SignUpPage() {
     }
 
     try {
-      // TODO: Replace with actual MongoDB registration API call
-      console.log("Registration data:", {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password
+        }),
       })
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // For now, just show success and redirect
-      alert("Account created successfully! (MongoDB integration pending)")
-      router.push("/sign-in")
-    } catch (err) {
-      setError("Registration failed. Please try again.")
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed')
+      }
+
+      // Registration successful, redirect to product page
+      router.push('/product')
+    } catch (err: any) {
+      setError(err.message || "Registration failed. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -80,19 +89,34 @@ export default function SignUpPage() {
           <p className="text-sm text-gray-600 text-center">Enter your details to create an account</p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                name="name"
-                type="text"
-                placeholder="Enter your full name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                disabled={loading}
-              />
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  placeholder="Enter your first name"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  placeholder="Enter your last name"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  required
+                  disabled={loading}
+                />
+              </div>
             </div>
             
             <div className="space-y-2">
