@@ -61,16 +61,18 @@ export default function Header() {
               </>
             ) : null}
             
-            {/* Cart Button */}
-            <Button asChild variant="outline" size="sm" className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white">
-              <Link href="/cart" aria-label="Cart" className="flex items-center gap-2">
-                <ShoppingCart className="h-4 w-4" />
-                <span className="hidden sm:inline">Cart</span>
-                <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] h-5 flex items-center justify-center">
-                  {count}
-                </span>
-              </Link>
-            </Button>
+            {/* Cart Button - only show when user is logged in */}
+            {user && (
+              <Button asChild variant="outline" size="sm" className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white">
+                <Link href="/cart" aria-label="Cart" className="flex items-center gap-2">
+                  <ShoppingCart className="h-4 w-4" />
+                  <span className="hidden sm:inline">Cart</span>
+                  <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] h-5 flex items-center justify-center">
+                    {count}
+                  </span>
+                </Link>
+              </Button>
+            )}
             
             {/* Logout Button - positioned after cart */}
             {user && (
@@ -89,14 +91,17 @@ export default function Header() {
         
         {/* Mobile menu button */}
         <div className="md:hidden flex items-center gap-2">
-          <Button asChild variant="outline" size="sm" className="border-slate-700 text-slate-300 hover:bg-slate-800">
-            <Link href="/cart" aria-label="Cart" className="flex items-center gap-1">
-              <ShoppingCart className="h-4 w-4" />
-              <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[16px] h-4 flex items-center justify-center text-[10px]">
-                {count}
-              </span>
-            </Link>
-          </Button>
+          {/* Mobile Cart - only show when user is logged in */}
+          {user && (
+            <Button asChild variant="outline" size="sm" className="border-slate-700 text-slate-300 hover:bg-slate-800">
+              <Link href="/cart" aria-label="Cart" className="flex items-center gap-1">
+                <ShoppingCart className="h-4 w-4" />
+                <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[16px] h-4 flex items-center justify-center text-[10px]">
+                  {count}
+                </span>
+              </Link>
+            </Button>
+          )}
           <Button 
             variant="ghost" 
             size="sm" 
@@ -112,20 +117,25 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-slate-800 bg-slate-900/95 backdrop-blur">
           <div className="px-4 py-4 space-y-3">
-            <Link 
-              href="/products" 
-              className="block text-slate-300 hover:text-white transition-colors font-medium py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Products
-            </Link>
-            <Link 
-              href="/#features" 
-              className="block text-slate-300 hover:text-white transition-colors font-medium py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Features
-            </Link>
+            {/* Only show Products and Features links when user is logged in */}
+            {user && (
+              <>
+                <Link 
+                  href="/products" 
+                  className="block text-slate-300 hover:text-white transition-colors font-medium py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Products
+                </Link>
+                <Link 
+                  href="/#features" 
+                  className="block text-slate-300 hover:text-white transition-colors font-medium py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Features
+                </Link>
+              </>
+            )}
             <div className="flex flex-col gap-2 pt-2 border-t border-slate-800">
               {loading ? (
                 <div className="flex justify-center py-2">
