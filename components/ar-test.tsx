@@ -72,55 +72,55 @@ export default function ARTest() {
   }
 
   return (
-    <div className="p-4 border rounded-lg bg-gray-50">
-      <h3 className="font-semibold mb-3">AR Compatibility Check</h3>
+    <div className="p-4 border rounded-lg bg-slate-800/60 border-slate-700 text-slate-200">
+      <h3 className="font-semibold mb-3 text-slate-100">AR Compatibility Check</h3>
       
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
-          <span>Device:</span>
-          <span className="font-medium">{getDeviceInfo()}</span>
+          <span className="text-slate-300">Device:</span>
+          <span className="font-medium text-slate-100">{getDeviceInfo()}</span>
         </div>
         
         <div className="flex justify-between">
-          <span>Browser:</span>
-          <span className="font-medium">{getBrowserInfo()}</span>
+          <span className="text-slate-300">Browser:</span>
+          <span className="font-medium text-slate-100">{getBrowserInfo()}</span>
         </div>
         
-        <hr className="my-3" />
+        <hr className="my-3 border-slate-700" />
         
         <div className="flex justify-between">
-          <span>WebXR Support:</span>
-          <span className={arSupport.webxr ? "text-green-600 font-medium" : "text-red-600"}>
+          <span className="text-slate-300">WebXR Support:</span>
+          <span className={arSupport.webxr ? "text-green-400 font-medium" : "text-red-400"}>
             {arSupport.webxr ? "✓ Yes" : "✗ No"}
           </span>
         </div>
         
         <div className="flex justify-between">
-          <span>Scene Viewer (Android):</span>
-          <span className={arSupport.sceneViewer ? "text-green-600 font-medium" : "text-gray-500"}>
+          <span className="text-slate-300">Scene Viewer (Android):</span>
+          <span className={arSupport.sceneViewer ? "text-green-400 font-medium" : "text-slate-400"}>
             {arSupport.sceneViewer ? "✓ Available" : "- Not Android"}
           </span>
         </div>
         
         <div className="flex justify-between">
-          <span>Quick Look (iOS):</span>
-          <span className={arSupport.quickLook ? "text-green-600 font-medium" : "text-gray-500"}>
+          <span className="text-slate-300">Quick Look (iOS):</span>
+          <span className={arSupport.quickLook ? "text-green-400 font-medium" : "text-slate-400"}>
             {arSupport.quickLook ? "✓ Available" : "- Not iOS"}
           </span>
         </div>
         
-        <hr className="my-3" />
+        <hr className="my-3 border-slate-700" />
         
         <div className="flex justify-between">
-          <span><strong>Overall AR Support:</strong></span>
-          <span className={arSupport.overall ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+          <span className="text-slate-200"><strong>Overall AR Support:</strong></span>
+          <span className={arSupport.overall ? "text-green-400 font-bold" : "text-red-400 font-bold"}>
             {arSupport.overall ? "✓ Supported" : "✗ Not Supported"}
           </span>
         </div>
       </div>
       
       {!arSupport.overall && (
-        <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+        <div className="mt-3 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded text-xs text-yellow-300">
           <strong>For best AR experience:</strong><br/>
           • Use mobile device (iOS or Android)<br/>
           • iOS: Use Safari browser<br/>

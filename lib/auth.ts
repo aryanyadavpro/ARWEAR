@@ -6,6 +6,8 @@ import User from '@/models/User'
 export interface AuthUser {
   userId: string
   email: string
+  firstName: string
+  lastName: string
 }
 
 export async function verifyToken(token: string): Promise<AuthUser | null> {
@@ -53,7 +55,7 @@ export async function getUserFromToken(token: string) {
   }
 }
 
-export function generateToken(payload: { userId: string; email: string }): string {
+export function generateToken(payload: { userId: string; email: string; firstName: string; lastName: string }): string {
   if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET is not defined')
   }

@@ -45,11 +45,13 @@ export async function POST(request: NextRequest) {
       lastName
     })
 
-    // Create JWT token
+    // Create JWT token (include basic profile fields to avoid DB dependency for auth checks)
     const token = jwt.sign(
       { 
-        userId: user._id,
-        email: user.email 
+        userId: user._id.toString(),
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName
       },
       process.env.JWT_SECRET!,
       { expiresIn: '7d' }
@@ -74,7 +76,8 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 // 7 days (in seconds)
     })
 
     return response

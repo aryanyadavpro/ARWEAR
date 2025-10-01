@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const MONGODB_URI = process.env.MONGODB_URI!
+const MONGODB_DB = process.env.MONGODB_DB
 
 if (!MONGODB_URI) {
   throw new Error(
@@ -35,7 +36,11 @@ async function connectDB() {
   if (!cached!.promise) {
     const opts = {
       bufferCommands: false,
-    }
+      // Use dbName if provided via env; otherwise, the db from the URI (or 'test') will be used
+      dbName: MONGODB_DB,
+      // Fail fast if the cluster is unreachable
+      serverSelectionTimeoutMS: 10000,
+    } as const
 
     cached!.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
       return mongoose

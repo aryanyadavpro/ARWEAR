@@ -65,10 +65,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-white text-gray-900 antialiased`}>
+      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-slate-900 text-slate-100 antialiased`}>
         <AuthProvider>
           <Suspense fallback={
-            <div className="flex items-center justify-center min-h-screen bg-white">
+            <div className="flex items-center justify-center min-h-screen bg-slate-900">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
             </div>
           }>

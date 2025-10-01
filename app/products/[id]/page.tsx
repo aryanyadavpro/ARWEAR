@@ -7,17 +7,21 @@ import { formatInrFromUsdCents } from "@/lib/utils"
 import { useCartStore } from "@/store/cart-store"
 import { seedProducts } from "@/data/seed-products"
 import dynamic from "next/dynamic"
-import TryOnComponent from "@/components/try-on-component"
 import ARTest from "@/components/ar-test"
 import ARErrorBoundary from "@/components/ar-error-boundary"
+import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 const ModelViewerAR = dynamic(() => import("@/components/model-viewer-ar"), { ssr: false })
+const TryOn3D = dynamic(() => import("@/components/tryon-3d"), { ssr: false })
 
 export default function ProductDetailPage() {
   const params = useParams<{ id: string }>()
   const product = useMemo(() => seedProducts.find((p) => p.id === params.id), [params.id])
   const addToCart = useCartStore((s) => s.add)
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     if (!product) {
@@ -31,7 +35,13 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <div className="mx-auto max-w-6xl px-4 py-8 grid gap-8 md:grid-cols-2">
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <div className="mb-6">
+          <Button variant="outline" size="sm" className="border-slate-600 text-slate-200 hover:bg-slate-800" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" />Back
+          </Button>
+        </div>
+        <div className="grid gap-8 md:grid-cols-2">
         <div className="space-y-4">
           <ARErrorBoundary>
             <ModelViewerAR glbUrl={product.modelUrl} poster={product.previewImage} alt={`${product.title} 3D model`} />
@@ -138,6 +148,7 @@ export default function ProductDetailPage() {
             </div>
           </div>
         </div>
+        </div>
       </div>
       
       {/* Try On Modal */}
@@ -156,10 +167,7 @@ export default function ProductDetailPage() {
             </button>
           </div>
           <ARErrorBoundary>
-            <TryOnComponent 
-              product={product}
-              selectedSize={selectedSize}
-            />
+            <TryOn3D modelUrl={product.modelUrl} />
           </ARErrorBoundary>
         </div>
       </dialog>

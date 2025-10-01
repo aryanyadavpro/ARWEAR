@@ -4,6 +4,7 @@
 import { useRef } from "react"
 import "@google/model-viewer"
 import type { ModelViewerElement } from "@google/model-viewer"
+import { Button } from "@/components/ui/button"
 
 type Props = {
   glbUrl: string
@@ -148,45 +149,51 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
 
       {/* Controls */}
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button
-          className="px-3 py-1 rounded-md border"
-          onClick={() => handleScale("decrease")}
-          aria-label="Decrease scale"
-        >
-          −
-        </button>
-        <span className="text-sm font-medium">Scale</span>
-        <button
-          className="px-3 py-1 rounded-md border"
-          onClick={() => handleScale("increase")}
-          aria-label="Increase scale"
-        >
-          +
-        </button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-slate-600 bg-slate-900 text-slate-200 hover:bg-slate-800"
+            onClick={() => handleScale("decrease")}
+            aria-label="Decrease scale"
+          >
+            −
+          </Button>
+          <span className="text-sm font-medium text-slate-300">Scale</span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-slate-600 bg-slate-900 text-slate-200 hover:bg-slate-800"
+            onClick={() => handleScale("increase")}
+            aria-label="Increase scale"
+          >
+            +
+          </Button>
+        </div>
 
-        <button
-          className="ml-auto px-3 py-1 rounded-md border"
-          onClick={handleRotate}
-          aria-label="Rotate 15 degrees"
-        >
-          Rotate
-        </button>
-
-        {/* Removed "View in your space" button */}
+        <div className="ml-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-slate-600 bg-slate-900 text-slate-200 hover:bg-slate-800"
+            onClick={handleRotate}
+            aria-label="Rotate 15 degrees"
+          >
+            Rotate
+          </Button>
+        </div>
       </div>
 
       {/* AR Instructions */}
-      <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
-        <h4 className="text-sm font-medium text-blue-900 mb-1">
+      <div className="mt-3 p-3 bg-slate-800/60 border border-slate-700 rounded-md">
+        <h4 className="text-sm font-medium text-slate-100 mb-1">
           AR Viewing Instructions:
         </h4>
-        <ul className="text-xs text-blue-700 list-disc list-inside space-y-1">
-          <li>Click "View in your space" to place the model in your environment</li>
-          <li>Scan your floor and tap to place the object (model will be smaller and fixed)</li>
-          <li>Walk around and interact with the 3D model - it stays in place</li>
-          <li>Use pinch gestures to scale, drag to rotate the model</li>
-          <li>Works best on mobile devices with AR support</li>
-          <li>Adjust scale and rotation before entering AR mode for best results</li>
+        <ul className="text-xs text-slate-300 list-disc list-inside space-y-1">
+          <li>Use the Scale and Rotate controls to adjust the model</li>
+          <li>Ensure good lighting and keep your upper body in frame</li>
+          <li>On mobile, use a stable posture for smoother tracking</li>
+          <li>For AR-in-space, try the built-in AR button on supported devices</li>
         </ul>
       </div>
     </div>

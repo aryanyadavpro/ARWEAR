@@ -13,10 +13,10 @@ export default function Header() {
   const { user, logout, loading } = useAuth()
   
   return (
-    <header className="border-b border-gray-200 bg-white sticky top-0 z-50 shadow-sm">
+    <header className="border-b border-slate-700 bg-slate-900 sticky top-0 z-50 shadow-sm">
       <div className="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-          <span className="text-gray-900">
+          <span className="text-white">
             ARWEAR
           </span>
         </Link>
@@ -34,10 +34,10 @@ export default function Header() {
           {/* Navigation Links - only show when user is logged in */}
           {user && (
             <nav className="flex items-center gap-6">
-              <Link href="/products" className="text-gray-600 hover:text-violet-600 transition-colors font-medium">
+              <Link href="/products" className="text-slate-300 hover:text-white transition-colors font-medium">
                 Products
               </Link>
-              <Link href="/#features" className="text-gray-600 hover:text-violet-600 transition-colors font-medium">
+              <Link href="/#features" className="text-slate-300 hover:text-white transition-colors font-medium">
                 Features
               </Link>
             </nav>
@@ -49,7 +49,7 @@ export default function Header() {
               <div className="w-6 h-6 animate-spin rounded-full border-2 border-violet-400 border-t-transparent" />
             ) : !user ? (
               <>
-                <Button asChild variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100">
+                <Button asChild variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800">
                   <Link href="/sign-in">Sign in</Link>
                 </Button>
                 <Button asChild size="sm" className="bg-violet-600 hover:bg-violet-700 text-white">
@@ -60,7 +60,7 @@ export default function Header() {
             
             {/* Cart Button - only show when user is logged in */}
             {user && (
-              <Button asChild variant="outline" size="sm" className="border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+              <Button asChild variant="outline" size="sm" className="border-slate-600 text-slate-200 hover:bg-slate-800 hover:text-white">
                 <Link href="/cart" aria-label="Cart" className="flex items-center gap-2">
                   <ShoppingCart className="h-4 w-4" />
                   <span className="hidden sm:inline">Cart</span>
@@ -102,7 +102,7 @@ export default function Header() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            className="text-slate-300 hover:text-white hover:bg-slate-800"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             <Menu className="h-5 w-5" />
@@ -112,28 +112,28 @@ export default function Header() {
       
       {/* Mobile Navigation */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-200 bg-white">
+        <div className="md:hidden border-t border-slate-700 bg-slate-900">
           <div className="px-4 py-4 space-y-3">
             {/* Only show Products and Features links when user is logged in */}
             {user && (
               <>
                 <Link 
                   href="/products" 
-                  className="block text-gray-600 hover:text-violet-600 transition-colors font-medium py-2"
+                  className="block text-slate-300 hover:text-white transition-colors font-medium py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Products
                 </Link>
                 <Link 
                   href="/#features" 
-                  className="block text-gray-600 hover:text-violet-600 transition-colors font-medium py-2"
+                  className="block text-slate-300 hover:text-white transition-colors font-medium py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Features
                 </Link>
               </>
             )}
-            <div className="flex flex-col gap-2 pt-2 border-t border-gray-200">
+            <div className="flex flex-col gap-2 pt-2 border-t border-slate-700">
               {loading ? (
                 <div className="flex justify-center py-2">
                   <div className="w-6 h-6 animate-spin rounded-full border-2 border-violet-400 border-t-transparent" />
@@ -159,7 +159,7 @@ export default function Header() {
                 </>
               ) : (
                 <>
-                  <Button asChild variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 justify-start">
+                <Button asChild variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800 justify-start">
                     <Link href="/sign-in" onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
                   </Button>
                   <Button asChild size="sm" className="bg-violet-600 hover:bg-violet-700 text-white justify-start">
