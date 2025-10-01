@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/lib/auth-context"
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -19,6 +20,7 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const { login } = useAuth()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -72,6 +74,9 @@ export default function SignUpPage() {
         throw new Error(data.error || 'Registration failed')
       }
 
+      // Update auth context with user data
+      login(data.user)
+      
       // Registration successful, redirect to product page
       router.push('/product')
     } catch (err: any) {

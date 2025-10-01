@@ -7,6 +7,7 @@ import "./globals.css"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { Suspense } from "react"
+import { AuthProvider } from "@/lib/auth-context"
 
 // Centralized site-wide metadata
 export const metadata: Metadata = {
@@ -65,16 +66,18 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-slate-900 text-white antialiased`}>
-        <Suspense fallback={
-          <div className="flex items-center justify-center min-h-screen bg-slate-900">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          </div>
-        }>
-          <Header />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
-          <Analytics />
-        </Suspense>
+        <AuthProvider>
+          <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen bg-slate-900">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            </div>
+          }>
+            <Header />
+            <main className="min-h-screen">{children}</main>
+            <Footer />
+            <Analytics />
+          </Suspense>
+        </AuthProvider>
       </body>
     </html>
   )

@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { LogOut, User, ShoppingBag, Eye } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { User, ShoppingBag, Eye } from "lucide-react"
 import ProductList from "@/components/product-list"
 
 interface AuthUser {
@@ -48,17 +46,6 @@ export default function ProductPage() {
     }
   }
 
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      })
-      router.push('/')
-    } catch (error) {
-      console.error('Logout failed:', error)
-    }
-  }
 
   if (loading) {
     return (
@@ -77,26 +64,6 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Header */}
-      <header className="bg-slate-800/50 backdrop-blur border-b border-slate-700">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-            ARWEAR
-          </Link>
-          
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-slate-300">
-              <User className="h-5 w-5" />
-              <span>Welcome, {user.firstName}!</span>
-            </div>
-            <Button onClick={handleLogout} variant="outline" size="sm" className="border-slate-600 text-slate-300 hover:bg-slate-700">
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Welcome Section */}
