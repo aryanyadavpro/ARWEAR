@@ -64,12 +64,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-slate-900 text-white antialiased`}>
+    <html lang="en">
+      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-white text-gray-900 antialiased`}>
         <AuthProvider>
           <Suspense fallback={
-            <div className="flex items-center justify-center min-h-screen bg-slate-900">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <div className="flex items-center justify-center min-h-screen bg-white">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
             </div>
           }>
             <Header />

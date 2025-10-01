@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ShoppingCart, Sparkles, Menu, User, LogOut } from "lucide-react"
+import { ShoppingCart, Menu, User, LogOut } from "lucide-react"
 import { useCartStore } from "@/store/cart-store"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
@@ -13,13 +13,10 @@ export default function Header() {
   const { user, logout, loading } = useAuth()
   
   return (
-    <header className="border-b border-slate-800 bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-slate-900/60 sticky top-0 z-50">
+    <header className="border-b border-gray-200 bg-white sticky top-0 z-50 shadow-sm">
       <div className="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-          <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg">
-            <Sparkles className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+          <span className="text-gray-900">
             ARWEAR
           </span>
         </Link>
@@ -28,19 +25,19 @@ export default function Header() {
         <div className="hidden md:flex items-center gap-6">
           {/* Welcome message - show first when user is logged in */}
           {user && (
-            <div className="flex items-center gap-2 text-slate-300 bg-slate-800/30 px-3 py-1.5 rounded-md">
-              <User className="h-4 w-4" />
-              <span className="text-sm">Welcome, {user.firstName}!</span>
+            <div className="flex items-center gap-2 text-gray-700 bg-green-50 px-3 py-1.5 rounded-lg border border-green-200">
+              <User className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium">Welcome, {user.firstName}!</span>
             </div>
           )}
           
           {/* Navigation Links - only show when user is logged in */}
           {user && (
             <nav className="flex items-center gap-6">
-              <Link href="/products" className="text-slate-300 hover:text-white transition-colors font-medium">
+              <Link href="/products" className="text-gray-600 hover:text-violet-600 transition-colors font-medium">
                 Products
               </Link>
-              <Link href="/#features" className="text-slate-300 hover:text-white transition-colors font-medium">
+              <Link href="/#features" className="text-gray-600 hover:text-violet-600 transition-colors font-medium">
                 Features
               </Link>
             </nav>
@@ -49,13 +46,13 @@ export default function Header() {
           <div className="flex items-center gap-3 ml-4">
             {/* Auth Buttons - only show when not logged in */}
             {loading ? (
-              <div className="w-8 h-8 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
+              <div className="w-6 h-6 animate-spin rounded-full border-2 border-violet-400 border-t-transparent" />
             ) : !user ? (
               <>
-                <Button asChild variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800">
+                <Button asChild variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100">
                   <Link href="/sign-in">Sign in</Link>
                 </Button>
-                <Button asChild size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                <Button asChild size="sm" className="bg-violet-600 hover:bg-violet-700 text-white">
                   <Link href="/sign-up">Sign up</Link>
                 </Button>
               </>
@@ -63,11 +60,11 @@ export default function Header() {
             
             {/* Cart Button - only show when user is logged in */}
             {user && (
-              <Button asChild variant="outline" size="sm" className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white">
+              <Button asChild variant="outline" size="sm" className="border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
                 <Link href="/cart" aria-label="Cart" className="flex items-center gap-2">
                   <ShoppingCart className="h-4 w-4" />
                   <span className="hidden sm:inline">Cart</span>
-                  <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] h-5 flex items-center justify-center">
+                  <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] h-5 flex items-center justify-center font-medium">
                     {count}
                   </span>
                 </Link>
@@ -80,7 +77,7 @@ export default function Header() {
                 onClick={logout} 
                 variant="ghost" 
                 size="sm" 
-                className="text-slate-300 hover:text-white hover:bg-slate-800"
+                className="text-gray-600 hover:text-red-600 hover:bg-red-50"
               >
                 <LogOut className="h-4 w-4 mr-1" />
                 <span className="hidden sm:inline">Logout</span>
@@ -93,10 +90,10 @@ export default function Header() {
         <div className="md:hidden flex items-center gap-2">
           {/* Mobile Cart - only show when user is logged in */}
           {user && (
-            <Button asChild variant="outline" size="sm" className="border-slate-700 text-slate-300 hover:bg-slate-800">
+            <Button asChild variant="outline" size="sm" className="border-gray-300 text-gray-600 hover:bg-gray-50">
               <Link href="/cart" aria-label="Cart" className="flex items-center gap-1">
                 <ShoppingCart className="h-4 w-4" />
-                <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[16px] h-4 flex items-center justify-center text-[10px]">
+                <span className="bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[16px] h-4 flex items-center justify-center text-[10px] font-medium">
                   {count}
                 </span>
               </Link>
@@ -105,7 +102,7 @@ export default function Header() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="text-slate-300 hover:text-white hover:bg-slate-800"
+            className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             <Menu className="h-5 w-5" />
@@ -115,37 +112,37 @@ export default function Header() {
       
       {/* Mobile Navigation */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-800 bg-slate-900/95 backdrop-blur">
+        <div className="md:hidden border-t border-gray-200 bg-white">
           <div className="px-4 py-4 space-y-3">
             {/* Only show Products and Features links when user is logged in */}
             {user && (
               <>
                 <Link 
                   href="/products" 
-                  className="block text-slate-300 hover:text-white transition-colors font-medium py-2"
+                  className="block text-gray-600 hover:text-violet-600 transition-colors font-medium py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Products
                 </Link>
                 <Link 
                   href="/#features" 
-                  className="block text-slate-300 hover:text-white transition-colors font-medium py-2"
+                  className="block text-gray-600 hover:text-violet-600 transition-colors font-medium py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Features
                 </Link>
               </>
             )}
-            <div className="flex flex-col gap-2 pt-2 border-t border-slate-800">
+            <div className="flex flex-col gap-2 pt-2 border-t border-gray-200">
               {loading ? (
                 <div className="flex justify-center py-2">
-                  <div className="w-6 h-6 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
+                  <div className="w-6 h-6 animate-spin rounded-full border-2 border-violet-400 border-t-transparent" />
                 </div>
               ) : user ? (
                 <>
-                  <div className="flex items-center gap-2 text-slate-300 bg-slate-800/30 px-3 py-2 rounded-md mb-2">
-                    <User className="h-4 w-4" />
-                    <span>Welcome, {user.firstName}!</span>
+                  <div className="flex items-center gap-2 text-gray-700 bg-green-50 px-3 py-2 rounded-lg border border-green-200 mb-2">
+                    <User className="h-4 w-4 text-green-600" />
+                    <span className="font-medium">Welcome, {user.firstName}!</span>
                   </div>
                   <Button 
                     onClick={() => {
@@ -154,7 +151,7 @@ export default function Header() {
                     }} 
                     variant="ghost" 
                     size="sm" 
-                    className="text-slate-300 hover:text-white hover:bg-slate-800 justify-start"
+                    className="text-gray-600 hover:text-red-600 hover:bg-red-50 justify-start"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
@@ -162,10 +159,10 @@ export default function Header() {
                 </>
               ) : (
                 <>
-                  <Button asChild variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800 justify-start">
+                  <Button asChild variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 justify-start">
                     <Link href="/sign-in" onClick={() => setMobileMenuOpen(false)}>Sign in</Link>
                   </Button>
-                  <Button asChild size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 justify-start">
+                  <Button asChild size="sm" className="bg-violet-600 hover:bg-violet-700 text-white justify-start">
                     <Link href="/sign-up" onClick={() => setMobileMenuOpen(false)}>Sign up</Link>
                   </Button>
                 </>

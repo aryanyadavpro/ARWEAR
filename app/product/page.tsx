@@ -49,10 +49,10 @@ export default function ProductPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-slate-300">Loading...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-violet-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
     )
@@ -63,40 +63,40 @@ export default function ProductPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-white">
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-400 mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Welcome to Your AR Experience
           </h1>
-          <p className="text-xl text-slate-300 max-w-3xl mx-auto mb-8">
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
             Explore our collection with cutting-edge AR technology. Try on clothes virtually and see them in your space!
           </p>
           
           <div className="grid md:grid-cols-3 gap-6 mb-8">
-            <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
+            <Card className="bg-white border-gray-200 shadow-sm">
               <CardContent className="p-6 text-center">
-                <Eye className="h-12 w-12 text-blue-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">Virtual Try-On</h3>
-                <p className="text-slate-300">See how clothes look on you using your camera</p>
+                <Eye className="h-12 w-12 text-violet-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Virtual Try-On</h3>
+                <p className="text-gray-600">See how clothes look on you using your camera</p>
               </CardContent>
             </Card>
             
-            <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
+            <Card className="bg-white border-gray-200 shadow-sm">
               <CardContent className="p-6 text-center">
-                <ShoppingBag className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">3D Models</h3>
-                <p className="text-slate-300">Place realistic 3D models in your environment</p>
+                <ShoppingBag className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">3D Models</h3>
+                <p className="text-gray-600">Place realistic 3D models in your environment</p>
               </CardContent>
             </Card>
             
-            <Card className="bg-slate-800/50 backdrop-blur border-slate-700">
+            <Card className="bg-white border-gray-200 shadow-sm">
               <CardContent className="p-6 text-center">
-                <User className="h-12 w-12 text-green-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">Personalized</h3>
-                <p className="text-slate-300">Get recommendations based on your preferences</p>
+                <User className="h-12 w-12 text-violet-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Personalized</h3>
+                <p className="text-gray-600">Get recommendations based on your preferences</p>
               </CardContent>
             </Card>
           </div>
@@ -104,7 +104,7 @@ export default function ProductPage() {
 
         {/* Products Section */}
         <section>
-          <h2 className="text-3xl font-bold text-white mb-8 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
             AR-Enabled Products
           </h2>
           <ProductList />
