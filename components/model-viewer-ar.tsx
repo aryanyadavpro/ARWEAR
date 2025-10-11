@@ -1,10 +1,17 @@
 // @ts-nocheck
 "use client"
 
-import { useRef } from "react"
-import "@google/model-viewer"
-import type { ModelViewerElement } from "@google/model-viewer"
+import { useRef, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
+
+// Declare model-viewer as a custom element
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'model-viewer': any
+    }
+  }
+}
 
 type Props = {
   glbUrl: string
@@ -13,8 +20,46 @@ type Props = {
 }
 
 export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
-  const viewerRef = useRef<ModelViewerElement | null>(null)
-  const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
+  const viewerRef = useRef<any>(null)
+  const [isModelViewerLoaded, setIsModelViewerLoaded] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+  const [isAndroid, setIsAndroid] = useState(false)
+  
+  useEffect(() => {
+    setIsClient(true)
+    setIsAndroid(/Android/i.test(navigator.userAgent))
+    
+    const loadModelViewer = async () => {
+      // Check if model-viewer is already loaded
+      if (window.customElements && window.customElements.get('model-viewer')) {
+        setIsModelViewerLoaded(true)
+        return
+      }
+      
+      const scriptId = "model-viewer-script-ar"
+      if (!document.getElementById(scriptId)) {
+        const script = document.createElement("script")
+        script.src = "https://unpkg.com/@google/model-viewer@v3.3.0/dist/model-viewer.min.js"
+        script.type = "module"
+        script.id = scriptId
+        script.crossOrigin = "anonymous"
+        
+        script.onload = () => {
+          console.log('Model Viewer script loaded for AR')
+          setTimeout(() => setIsModelViewerLoaded(true), 200)
+        }
+        script.onerror = (e) => {
+          console.error('Failed to load Model Viewer script for AR:', e)
+        }
+        
+        document.head.appendChild(script)
+      } else {
+        setIsModelViewerLoaded(true)
+      }
+    }
+    
+    loadModelViewer()
+  }, [])
 
   const handleScale = (factor: "increase" | "decrease") => {
     if (!viewerRef.current) return
@@ -38,9 +83,9 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
     if (!viewerRef.current) return
 
     try {
-      // Check for HTTPS or localhost (required for AR)
-      if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-        throw new Error('AR requires HTTPS or localhost')
+      // Check for secure context (required for AR)
+      if (!window.isSecureContext) {
+        throw new Error('AR requires a secure context (HTTPS)')
       }
 
       // Prefer Android Scene Viewer when on Android
@@ -117,6 +162,20 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
     }
   }
 
+  if (!isModelViewerLoaded) {
+    return (
+      <div className="w-full">
+        <div className="w-full h-[420px] bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-slate-300 font-medium">Loading 3D AR Viewer...</p>
+            <p className="text-slate-400 text-sm mt-1">Preparing AR experience</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full">
       <model-viewer
@@ -139,6 +198,12 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
         loading="eager"
         reveal="auto"
         scale="0.1 0.1 0.1"
+        onError={(e: any) => {
+          console.error('Model Viewer Error:', e)
+        }}
+        onLoad={() => {
+          console.log('Model loaded successfully')
+        }}
         style={{
           width: "100%",
           height: "420px",

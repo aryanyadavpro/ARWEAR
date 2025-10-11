@@ -51,8 +51,22 @@ export default function TryOnComponent({ product, selectedSize }: TryOnComponent
     try {
       addDebug("Checking getUserMedia support...")
       
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Camera not supported in this browser")
+      // Check for secure context first
+      if (!window.isSecureContext) {
+        throw new Error("Camera access requires HTTPS (secure context)")
+      }
+      
+      // Check for navigator and mediaDevices
+      if (typeof navigator === 'undefined') {
+        throw new Error("Navigator not available")
+      }
+      
+      if (!navigator.mediaDevices) {
+        throw new Error("MediaDevices API not supported in this browser")
+      }
+      
+      if (!navigator.mediaDevices.getUserMedia) {
+        throw new Error("getUserMedia not supported in this browser")
       }
       
       addDebug("getUserMedia is supported")
@@ -64,11 +78,21 @@ export default function TryOnComponent({ product, selectedSize }: TryOnComponent
         streamRef.current = null
       }
       
-      // Simple constraints that work everywhere
-      const constraints = {
+      // Enhanced constraints for better mobile compatibility
+      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      
+      const constraints: MediaStreamConstraints = {
         audio: false,
-        video: {
-          facingMode: "user"
+        video: isMobile ? {
+          facingMode: "user",
+          width: { ideal: 640, min: 320, max: 1280 },
+          height: { ideal: 480, min: 240, max: 720 },
+          frameRate: { ideal: 30, min: 15, max: 30 }
+        } : {
+          facingMode: "user",
+          width: { ideal: 1280, min: 640, max: 1920 },
+          height: { ideal: 720, min: 480, max: 1080 },
+          frameRate: { ideal: 30, min: 15, max: 60 }
         }
       }
       
@@ -145,17 +169,55 @@ export default function TryOnComponent({ product, selectedSize }: TryOnComponent
       console.error("Camera error:", err)
       
       let errorMessage = "Camera access failed. "
+      let troubleshooting: string[] = []
       
       if (err.name === "NotAllowedError") {
-        errorMessage = "Camera permission denied. Please allow camera access."
+        errorMessage = "Camera permission denied."
+        troubleshooting = [
+          "• Click the camera icon in your browser's address bar",
+          "• Select 'Allow' for camera access",
+          "• Refresh the page and try again",
+          "• Check your browser's camera settings"
+        ]
       } else if (err.name === "NotFoundError") {
-        errorMessage = "No camera found."
+        errorMessage = "No camera found on this device."
+        troubleshooting = [
+          "• Make sure you have a working camera",
+          "• Try using a mobile device",
+          "• Check if other apps can access the camera"
+        ]
       } else if (err.name === "NotReadableError") {
-        errorMessage = "Camera is already in use."
+        errorMessage = "Camera is already in use by another application."
+        troubleshooting = [
+          "• Close other apps that might be using the camera",
+          "• Restart your browser",
+          "• Try again in a few moments"
+        ]
       } else if (err.message?.includes('timeout')) {
-        errorMessage = "Camera initialization timeout. Please try again."
+        errorMessage = "Camera initialization timeout."
+        troubleshooting = [
+          "• Check your internet connection",
+          "• Try refreshing the page",
+          "• Use a different browser if the issue persists"
+        ]
+      } else if (err.message?.includes('secure context') || err.message?.includes('HTTPS')) {
+        errorMessage = "Camera access requires a secure connection (HTTPS)."
+        troubleshooting = [
+          "• Make sure the website URL starts with 'https://'",
+          "• This feature only works on secure websites",
+          "• Try accessing the site directly instead of through a link"
+        ]
       } else {
         errorMessage += err.message
+        troubleshooting = [
+          "• Try refreshing the page",
+          "• Use a different browser (Chrome or Safari recommended)",
+          "• Check if your camera works in other apps"
+        ]
+      }
+      
+      if (troubleshooting.length > 0) {
+        errorMessage += "\n\nTroubleshooting:\n" + troubleshooting.join("\n")
       }
       
       setError(errorMessage)

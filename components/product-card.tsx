@@ -21,17 +21,39 @@ export default function ProductCard({
   const viewerRef = useRef<any>(null)
 
   useEffect(() => {
-    const id = "model-viewer-script"
-    if (!document.getElementById(id)) {
-      const s = document.createElement("script")
-      s.src = "https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"
-      s.async = true
-      s.id = id
-      document.head.appendChild(s)
-      s.onload = () => setSupported(true)
-    } else {
-      setSupported(true)
+    const loadModelViewer = async () => {
+      // Check if model-viewer is already loaded
+      if (window.customElements && window.customElements.get('model-viewer')) {
+        setSupported(true)
+        return
+      }
+      
+      const id = "model-viewer-script"
+      if (!document.getElementById(id)) {
+        const s = document.createElement("script")
+        s.src = "https://unpkg.com/@google/model-viewer@v3.3.0/dist/model-viewer.min.js"
+        s.type = "module"
+        s.id = id
+        s.crossOrigin = "anonymous"
+        
+        // Handle both load and error events
+        s.onload = () => {
+          console.log('Model Viewer script loaded successfully')
+          // Wait a bit for the custom element to register
+          setTimeout(() => setSupported(true), 100)
+        }
+        s.onerror = (e) => {
+          console.error('Failed to load Model Viewer script:', e)
+          setSupported(false)
+        }
+        
+        document.head.appendChild(s)
+      } else {
+        setSupported(true)
+      }
     }
+    
+    loadModelViewer()
   }, [])
 
   return (

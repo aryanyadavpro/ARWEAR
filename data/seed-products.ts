@@ -23,7 +23,7 @@ export const seedProducts: SeedProduct[] = [
     sizes: ["S", "M", "L", "XL"],
     priceCents: 2500,
     stock: 12,
-    previewImage: "/assets/3d/t-shirt (1).glb",
+    previewImage: "/images/product-1.jpg",
     modelUrl: "/assets/3d/t-shirt (1).glb",
   },
   {
@@ -35,7 +35,7 @@ export const seedProducts: SeedProduct[] = [
     sizes: ["S", "M", "L", "XL"],
     priceCents: 2800,
     stock: 7,
-    previewImage: "/assets/3d/t-shirts_homme.glb",
+    previewImage: "/images/product-2.jpg",
     modelUrl: "/assets/3d/t-shirts_homme.glb",
   },
   {
@@ -47,7 +47,7 @@ export const seedProducts: SeedProduct[] = [
     sizes: ["S", "M", "L", "XL"],
     priceCents: 4500,
     stock: 6,
-    previewImage: "/assets/3d/unisex_denim_shirt_design.glb",
+    previewImage: "/images/product-3.jpg",
     modelUrl: "/assets/3d/unisex_denim_shirt_design.glb",
   },
   {
@@ -59,7 +59,7 @@ export const seedProducts: SeedProduct[] = [
     sizes: ["28", "30", "32", "34"],
     priceCents: 5400,
     stock: 8,
-    previewImage: "/assets/3d/baggy_pants_free.glb",
+    previewImage: "/images/product-4.jpg",
     modelUrl: "/assets/3d/baggy_pants_free.glb",
   },
   {
@@ -71,7 +71,7 @@ export const seedProducts: SeedProduct[] = [
     sizes: ["S", "M", "L", "XL"],
     priceCents: 7500,
     stock: 5,
-    previewImage: "/assets/3d/men_jacket.glb",
+    previewImage: "/images/product-5.jpg",
     modelUrl: "/assets/3d/men_jacket.glb",
   },
 ]

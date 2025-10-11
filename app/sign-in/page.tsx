@@ -60,8 +60,15 @@ export default function SignInPage() {
       // Update auth context with user data
       login(data.user)
       
-      // Login successful, redirect to product page
-      router.push('/product')
+      // Login successful, redirect to products page or back to where user came from
+      const urlParams = new URLSearchParams(window.location.search)
+      const from = urlParams.get('from')
+      
+      if (from && from !== '/sign-in') {
+        router.push(from)
+      } else {
+        router.push('/products')
+      }
     } catch (err: any) {
       setError(err.message || "Login failed. Please check your credentials.")
     } finally {

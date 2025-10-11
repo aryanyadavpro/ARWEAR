@@ -7,14 +7,18 @@ import { formatInrFromUsdCents } from "@/lib/utils"
 import { useCartStore } from "@/store/cart-store"
 import { seedProducts } from "@/data/seed-products"
 import dynamic from "next/dynamic"
-import ARTest from "@/components/ar-test"
 import ARErrorBoundary from "@/components/ar-error-boundary"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 const ModelViewerAR = dynamic(() => import("@/components/model-viewer-ar"), { ssr: false })
+const TryOnComponent = dynamic(() => import("@/components/try-on-component"), { ssr: false })
+const ARVirtualTryon = dynamic(() => import("@/components/ar-virtual-tryon"), { ssr: false })
 const TryOn3D = dynamic(() => import("@/components/tryon-3d"), { ssr: false })
+const ARTest = dynamic(() => import("@/components/ar-test"), { ssr: false })
+const ARDiagnostics = dynamic(() => import("@/components/ar-diagnostics"), { ssr: false })
+const AuthDebug = dynamic(() => import("@/components/auth-debug"), { ssr: false })
 
 export default function ProductDetailPage() {
   const params = useParams<{ id: string }>()
@@ -152,25 +156,42 @@ export default function ProductDetailPage() {
       </div>
       
       {/* Try On Modal */}
-      <dialog id="try-on-modal" className="backdrop:bg-black/60 bg-slate-900 rounded-lg p-0 max-w-4xl w-full border border-slate-700">
+      <dialog id="try-on-modal" className="backdrop:bg-black/60 bg-slate-900 rounded-lg p-0 max-w-5xl w-full max-h-[90vh] border border-slate-700">
         <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold text-white">Try On - {product.title}</h2>
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-semibold text-white">AR Virtual Try-On</h2>
+              <p className="text-slate-400 text-sm mt-1">{product.title} {selectedSize ? `- Size ${selectedSize}` : ''}</p>
+            </div>
             <button
               onClick={() => {
                 const modal = document.getElementById('try-on-modal') as HTMLDialogElement
                 modal?.close()
               }}
-              className="text-slate-400 hover:text-white text-2xl transition-colors"
+              className="text-slate-400 hover:text-white text-2xl transition-colors p-2 hover:bg-slate-800 rounded"
             >
               ×
             </button>
           </div>
           <ARErrorBoundary>
-            <TryOn3D modelUrl={product.modelUrl} />
+            <ARVirtualTryon 
+              modelUrl={product.modelUrl} 
+              className="w-full"
+            />
           </ARErrorBoundary>
+          <div className="mt-4 text-center">
+            <p className="text-slate-400 text-sm">
+              💡 Move naturally to see how {product.title} fits and looks on you
+            </p>
+          </div>
         </div>
       </dialog>
+      
+      {/* AR Diagnostics - floating button */}
+      <ARDiagnostics />
+      
+      {/* Auth Debug - floating button */}
+      <AuthDebug />
     </div>
   )
 }

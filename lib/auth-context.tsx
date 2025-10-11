@@ -25,24 +25,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
-  const checkAuth = async () => {
+  const checkAuth = async (retryCount = 0) => {
     try {
       const response = await fetch('/api/auth/me', {
         method: 'GET',
         credentials: 'include',
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
       })
       
       if (response.ok) {
         const data = await response.json()
         setUser(data.user)
+        console.log('Auth check successful:', data.user.firstName)
+      } else if (response.status === 401) {
+        // Unauthorized - user not logged in
+        setUser(null)
+        console.log('User not authenticated')
       } else {
+        // Other errors - retry once on mobile
+        if (retryCount === 0 && /Mobi|Android/i.test(navigator.userAgent)) {
+          console.log('Retrying auth check on mobile...')
+          setTimeout(() => checkAuth(1), 1000)
+          return
+        }
         setUser(null)
       }
     } catch (error) {
       console.error('Auth check failed:', error)
+      // Retry once on network errors for mobile
+      if (retryCount === 0 && /Mobi|Android/i.test(navigator.userAgent)) {
+        console.log('Retrying auth check after network error...')
+        setTimeout(() => checkAuth(1), 2000)
+        return
+      }
       setUser(null)
     } finally {
-      setLoading(false)
+      if (retryCount > 0 || !/Mobi|Android/i.test(navigator.userAgent)) {
+        setLoading(false)
+      }
     }
   }
 

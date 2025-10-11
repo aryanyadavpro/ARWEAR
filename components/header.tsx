@@ -31,17 +31,15 @@ export default function Header() {
             </div>
           )}
           
-          {/* Navigation Links - only show when user is logged in */}
-          {user && (
-            <nav className="flex items-center gap-6">
-              <Link href="/products" className="text-slate-300 hover:text-white transition-colors font-medium">
-                Products
-              </Link>
-              <Link href="/#features" className="text-slate-300 hover:text-white transition-colors font-medium">
-                Features
-              </Link>
-            </nav>
-          )}
+          {/* Navigation Links - always show */}
+          <nav className="flex items-center gap-6">
+            <Link href="/products" className="text-slate-300 hover:text-white transition-colors font-medium">
+              Products
+            </Link>
+            <Link href="/#features" className="text-slate-300 hover:text-white transition-colors font-medium">
+              Features
+            </Link>
+          </nav>
           
           <div className="flex items-center gap-3 ml-4">
             {/* Auth Buttons - only show when not logged in */}
@@ -114,25 +112,21 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-slate-700 bg-slate-900">
           <div className="px-4 py-4 space-y-3">
-            {/* Only show Products and Features links when user is logged in */}
-            {user && (
-              <>
-                <Link 
-                  href="/products" 
-                  className="block text-slate-300 hover:text-white transition-colors font-medium py-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Products
-                </Link>
-                <Link 
-                  href="/#features" 
-                  className="block text-slate-300 hover:text-white transition-colors font-medium py-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Features
-                </Link>
-              </>
-            )}
+            {/* Always show Products and Features links */}
+            <Link 
+              href="/products" 
+              className="block text-slate-300 hover:text-white transition-colors font-medium py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Products
+            </Link>
+            <Link 
+              href="/#features" 
+              className="block text-slate-300 hover:text-white transition-colors font-medium py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Features
+            </Link>
             <div className="flex flex-col gap-2 pt-2 border-t border-slate-700">
               {loading ? (
                 <div className="flex justify-center py-2">

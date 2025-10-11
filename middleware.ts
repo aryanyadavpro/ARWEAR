@@ -5,7 +5,12 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Protected routes that require authentication
-  const protectedRoutes = ['/product']
+  const protectedRoutes = [
+    '/admin',     // Admin panel requires auth
+    '/account',   // Account page requires auth  
+    '/checkout',  // Checkout requires auth
+    '/cart'       // Cart requires auth
+  ]
   
   // Check if the current path is protected
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))

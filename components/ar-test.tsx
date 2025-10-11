@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 
 export default function ARTest() {
+  const [isClient, setIsClient] = useState(false)
+  const [deviceInfo, setDeviceInfo] = useState({ browser: 'Loading...', device: 'Loading...' })
   const [arSupport, setArSupport] = useState<{
     webxr: boolean
     sceneViewer: boolean
@@ -16,6 +18,33 @@ export default function ARTest() {
   })
 
   useEffect(() => {
+    // Set client flag to prevent hydration mismatch
+    setIsClient(true)
+    
+    const getBrowserInfo = () => {
+      const ua = navigator.userAgent
+      if (ua.includes('Chrome')) return 'Chrome'
+      if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari'
+      if (ua.includes('Firefox')) return 'Firefox'
+      if (ua.includes('Edge')) return 'Edge'
+      return 'Unknown'
+    }
+
+    const getDeviceInfo = () => {
+      const ua = navigator.userAgent
+      if (/iPad|iPhone|iPod/.test(ua)) return 'iOS'
+      if (/Android/.test(ua)) return 'Android'
+      if (/Windows/.test(ua)) return 'Windows'
+      if (/Mac/.test(ua)) return 'macOS'
+      return 'Unknown'
+    }
+    
+    // Set device info
+    setDeviceInfo({
+      browser: getBrowserInfo(),
+      device: getDeviceInfo()
+    })
+    
     const checkARSupport = async () => {
       // Check WebXR support with session capability
       let webxrSupported = false
@@ -53,22 +82,17 @@ export default function ARTest() {
     checkARSupport()
   }, [])
 
-  const getBrowserInfo = () => {
-    const ua = navigator.userAgent
-    if (ua.includes('Chrome')) return 'Chrome'
-    if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari'
-    if (ua.includes('Firefox')) return 'Firefox'
-    if (ua.includes('Edge')) return 'Edge'
-    return 'Unknown'
-  }
-
-  const getDeviceInfo = () => {
-    const ua = navigator.userAgent
-    if (/iPad|iPhone|iPod/.test(ua)) return 'iOS'
-    if (/Android/.test(ua)) return 'Android'
-    if (/Windows/.test(ua)) return 'Windows'
-    if (/Mac/.test(ua)) return 'macOS'
-    return 'Unknown'
+  // Prevent hydration mismatch by only rendering after client-side hydration
+  if (!isClient) {
+    return (
+      <div className="p-4 border rounded-lg bg-slate-800/60 border-slate-700 text-slate-200">
+        <h3 className="font-semibold mb-3 text-slate-100">AR Compatibility Check</h3>
+        <div className="text-center py-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+          <p className="text-slate-300 text-sm">Checking device compatibility...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -78,12 +102,12 @@ export default function ARTest() {
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
           <span className="text-slate-300">Device:</span>
-          <span className="font-medium text-slate-100">{getDeviceInfo()}</span>
+          <span className="font-medium text-slate-100">{deviceInfo.device}</span>
         </div>
         
         <div className="flex justify-between">
           <span className="text-slate-300">Browser:</span>
-          <span className="font-medium text-slate-100">{getBrowserInfo()}</span>
+          <span className="font-medium text-slate-100">{deviceInfo.browser}</span>
         </div>
         
         <hr className="my-3 border-slate-700" />

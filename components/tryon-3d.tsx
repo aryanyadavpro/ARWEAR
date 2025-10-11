@@ -13,6 +13,18 @@ type Props = {
   onReadyChange?: (ready: boolean) => void
 }
 
+// Clothing type detection based on model file name
+type ClothingType = 'shirt' | 'jacket' | 'pants' | 'dress' | 'accessory'
+
+function getClothingType(modelUrl: string): ClothingType {
+  const filename = modelUrl.toLowerCase()
+  if (filename.includes('jacket')) return 'jacket'
+  if (filename.includes('pants') || filename.includes('trouser')) return 'pants'
+  if (filename.includes('dress')) return 'dress'
+  if (filename.includes('shirt') || filename.includes('tee') || filename.includes('t-shirt')) return 'shirt'
+  return 'shirt' // default
+}
+
 export default function TryOn3D({ modelUrl, onReadyChange }: Props) {
   const overlayRef = useRef<HTMLDivElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -31,9 +43,9 @@ export default function TryOn3D({ modelUrl, onReadyChange }: Props) {
 
     const init = async () => {
       try {
-        // Secure context check for camera on mobile browsers
-        if (!(window.isSecureContext || location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-          throw new Error('Camera requires HTTPS or localhost')
+        // Secure context check for camera (required for getUserMedia)
+        if (!window.isSecureContext) {
+          throw new Error('Camera access requires HTTPS (secure context)')
         }
 
         // TFJS backend with fallback
@@ -144,92 +156,178 @@ export default function TryOn3D({ modelUrl, onReadyChange }: Props) {
         })
 
         onReadyChange?.(true)
-         const animate = async (now?: number) => {
+        setStatus('Ready for try-on!')
+        
+        // Animation variables
+        let lastDetect = 0
+        const DETECT_INTERVAL = 100 // ms between pose detections
+        const offscreenCanvas = document.createElement('canvas')
+        const clothingType = getClothingType(modelUrl)
+        
+        // Body attachment points based on clothing type
+        function getAttachmentPoints(keypoints: any[], type: ClothingType) {
+          const kp = keypoints
+          const leftShoulder = kp.find(k => k.name === "left_shoulder")
+          const rightShoulder = kp.find(k => k.name === "right_shoulder")
+          const leftHip = kp.find(k => k.name === "left_hip")
+          const rightHip = kp.find(k => k.name === "right_hip")
+          const nose = kp.find(k => k.name === "nose")
+          
+          switch (type) {
+            case 'shirt':
+            case 'jacket':
+              return { leftShoulder, rightShoulder, leftHip, rightHip }
+            case 'pants':
+              return { leftHip, rightHip }
+            case 'dress':
+              return { leftShoulder, rightShoulder, leftHip, rightHip }
+            default:
+              return { leftShoulder, rightShoulder }
+          }
+        }
+        
+        // Calculate body measurements and positioning
+        function calculateBodyFit(attachmentPoints: any, videoWidth: number, videoHeight: number) {
+          const { leftShoulder, rightShoulder, leftHip, rightHip } = attachmentPoints
+          
+          // Check if we have minimum required points
+          if (!leftShoulder || !rightShoulder || 
+              leftShoulder.score < 0.5 || rightShoulder.score < 0.5) {
+            return null
+          }
+          
+          // Calculate shoulder measurements
+          const shoulderMidX = (leftShoulder.x + rightShoulder.x) / 2
+          const shoulderMidY = (leftShoulder.y + rightShoulder.y) / 2
+          const shoulderWidth = Math.hypot(
+            rightShoulder.x - leftShoulder.x,
+            rightShoulder.y - leftShoulder.y
+          )
+          const shoulderAngle = Math.atan2(
+            rightShoulder.y - leftShoulder.y,
+            rightShoulder.x - leftShoulder.x
+          )
+          
+          // Calculate torso length if we have hip points
+          let torsoLength = shoulderWidth * 1.5 // default fallback
+          let hipMidX = shoulderMidX
+          let hipMidY = shoulderMidY + torsoLength
+          
+          if (leftHip && rightHip && leftHip.score > 0.3 && rightHip.score > 0.3) {
+            hipMidX = (leftHip.x + rightHip.x) / 2
+            hipMidY = (leftHip.y + rightHip.y) / 2
+            torsoLength = Math.hypot(
+              hipMidX - shoulderMidX,
+              hipMidY - shoulderMidY
+            )
+          }
+          
+          // Convert to normalized device coordinates
+          const nx = (shoulderMidX / videoWidth) * 2 - 1
+          const ny = -(shoulderMidY / videoHeight) * 2 + 1
+          
+          return {
+            centerX: nx,
+            centerY: ny,
+            shoulderWidth: shoulderWidth / videoWidth,
+            torsoLength: torsoLength / videoHeight,
+            angle: shoulderAngle
+          }
+        }
+        
+        const animate = async (now?: number) => {
           if (!isMounted) return
-          const v = videoRef.current
-
-          if (v && detectorRef.current && modelRef.current) {
-            // Guard: video metadata must be ready
-            if (v.readyState >= 2 && v.videoWidth > 0 && v.videoHeight > 0) {
-              try {
-                // Throttle detection
-                if (!lastDetect || (now ?? performance.now()) - lastDetect >= DETECT_INTERVAL) {
-                  lastDetect = (now ?? performance.now())
-                  // Downscale input to speed up detection
-                  const aspect = v.videoWidth / v.videoHeight
-                  const W = 320
-                  off.width = W
-                  off.height = Math.max(1, Math.round(W / aspect))
-                  const octx = off.getContext('2d')!
-                  octx.drawImage(v, 0, 0, off.width, off.height)
-
-                  const poses = await detectorRef.current.estimatePoses(off, { flipHorizontal: true })
-                  if (poses[0]) {
-                    const kp = poses[0].keypoints
-                    const left = kp.find(k => k.name === "left_shoulder")
-                    const right = kp.find(k => k.name === "right_shoulder")
-                    if (left && right && left.score! > 0.5 && right.score! > 0.5) {
-                      const midX = (left.x + right.x) / 2
-                      const midY = (left.y + right.y) / 2
-                      const dx = right.x - left.x
-                      const dy = right.y - left.y
-                      const angle = Math.atan2(dy, dx)
-
-                      const nx = (midX / off.width) * 2 - 1
-                      const ny = -(midY / off.height) * 2 + 1
-
-                      // Map to orthographic world coords (x scaled by aspect)
-                      const r = rendererRef.current
-                      const a = r ? (r.domElement.clientWidth / Math.max(1, r.domElement.clientHeight)) : 1
-                      const x = nx * a
-                      const y = ny
-                      modelRef.current.position.set(x, y, 0)
-                      modelRef.current.rotation.set(0, 0, angle)
-
-                      // Scale to shoulder width proportion
-                      const shoulderDist = Math.hypot(dx, dy) / off.width
-                      const s = Math.max(0.25, Math.min(1.5, shoulderDist * 1.8))
-                      modelRef.current.scale.setScalar(s)
+          const video = videoRef.current
+          const model = modelRef.current
+          const detector = detectorRef.current
+          
+          if (video && detector && model && 
+              video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+            try {
+              // Throttle pose detection for performance
+              const currentTime = now ?? performance.now()
+              if (currentTime - lastDetect >= DETECT_INTERVAL) {
+                lastDetect = currentTime
+                
+                // Downscale video for faster pose detection
+                const aspectRatio = video.videoWidth / video.videoHeight
+                const detectionWidth = 320
+                const detectionHeight = Math.round(detectionWidth / aspectRatio)
+                
+                offscreenCanvas.width = detectionWidth
+                offscreenCanvas.height = detectionHeight
+                const ctx = offscreenCanvas.getContext('2d')!
+                ctx.drawImage(video, 0, 0, detectionWidth, detectionHeight)
+                
+                // Detect poses with horizontal flip for mirror effect
+                const poses = await detector.estimatePoses(offscreenCanvas, { 
+                  flipHorizontal: true 
+                })
+                
+                if (poses[0] && poses[0].keypoints) {
+                  const attachmentPoints = getAttachmentPoints(poses[0].keypoints, clothingType)
+                  const bodyFit = calculateBodyFit(attachmentPoints, detectionWidth, detectionHeight)
+                  
+                  if (bodyFit) {
+                    // Map to Three.js orthographic coordinates
+                    const renderer = rendererRef.current
+                    const camera = cameraRef.current
+                    if (renderer && camera) {
+                      const aspect = renderer.domElement.clientWidth / 
+                                   Math.max(1, renderer.domElement.clientHeight)
+                      
+                      // Position the model at the body center
+                      const worldX = bodyFit.centerX * aspect
+                      const worldY = bodyFit.centerY
+                      model.position.set(worldX, worldY, 0)
+                      
+                      // Rotate to match shoulder angle
+                      model.rotation.set(0, 0, bodyFit.angle)
+                      
+                      // Scale based on body measurements
+                      let scaleX = bodyFit.shoulderWidth * 2.5 // adjust for clothing fit
+                      let scaleY = bodyFit.torsoLength * 1.8
+                      let scaleZ = Math.min(scaleX, scaleY)
+                      
+                      // Clothing-specific scaling adjustments
+                      switch (clothingType) {
+                        case 'shirt':
+                        case 'jacket':
+                          scaleY *= 0.8 // shirts are shorter than full torso
+                          break
+                        case 'pants':
+                          scaleY *= 1.2 // pants are longer
+                          model.position.y -= 0.2 // position lower on body
+                          break
+                        case 'dress':
+                          scaleY *= 1.3 // dresses are longer
+                          break
+                      }
+                      
+                      // Clamp scaling to reasonable bounds
+                      scaleX = Math.max(0.3, Math.min(2.0, scaleX))
+                      scaleY = Math.max(0.3, Math.min(2.0, scaleY))
+                      scaleZ = Math.max(0.3, Math.min(2.0, scaleZ))
+                      
+                      model.scale.set(scaleX, scaleY, scaleZ)
                     }
                   }
                 }
-                if (poses[0]) {
-                  const kp = poses[0].keypoints
-                  const left = kp.find(k => k.name === "left_shoulder")
-                  const right = kp.find(k => k.name === "right_shoulder")
-                  if (left && right && left.score! > 0.5 && right.score! > 0.5) {
-                    const midX = (left.x + right.x) / 2
-                    const midY = (left.y + right.y) / 2
-                    const dx = right.x - left.x
-                    const dy = right.y - left.y
-                    const angle = Math.atan2(dy, dx)
-
-                    const nx = (midX / v.videoWidth) * 2 - 1
-                    const ny = -(midY / v.videoHeight) * 2 + 1
-
-                    // Map to orthographic world coords (x scaled by aspect)
-                    const r = rendererRef.current
-                    const a = r ? (r.domElement.clientWidth / Math.max(1, r.domElement.clientHeight)) : 1
-                    const x = nx * a
-                    const y = ny
-                    modelRef.current.position.set(x, y, 0)
-                    modelRef.current.rotation.set(0, 0, angle)
-
-                    // Scale to shoulder width proportion
-                    const shoulderDist = Math.hypot(dx, dy) / v.videoWidth
-                    const s = Math.max(0.25, Math.min(1.5, shoulderDist * 1.8))
-                    modelRef.current.scale.setScalar(s)
-                  }
-                }
-              } catch (e) {
-                // Swallow intermittent detector errors without crashing the render loop
               }
+            } catch (error) {
+              // Silently handle pose detection errors to prevent UI crashes
+              console.warn('Pose detection error:', error)
             }
           }
-
-          renderer.render(scene, camera)
+          
+          // Render the scene
+          if (rendererRef.current && sceneRef.current && cameraRef.current) {
+            rendererRef.current.render(sceneRef.current, cameraRef.current)
+          }
+          
           rafRef.current = requestAnimationFrame(animate)
         }
+        
         animate()
 
         return () => {

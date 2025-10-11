@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 
 export default function ARDiagnostics() {
+  const [isClient, setIsClient] = useState(false)
   const [diagnostics, setDiagnostics] = useState({
-    browser: '',
-    device: '',
+    browser: 'Loading...',
+    device: 'Loading...',
     protocol: '',
     cameraSupport: false,
     webxrSupport: false,
@@ -17,6 +18,8 @@ export default function ARDiagnostics() {
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
+    setIsClient(true)
+    
     const runDiagnostics = async () => {
       // Browser detection
       const getBrowser = () => {
