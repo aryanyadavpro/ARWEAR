@@ -185,9 +185,10 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
         alt={alt}
         ar
         ar-modes="webxr scene-viewer quick-look"
-        ar-placement="floor"
-        ar-scale="0.1 0.1 0.1"
+        ar-placement="wall"
+        ar-scale="1.0 1.0 1.0"
         ar-persist="true"
+        ios-src={glbUrl.replace('.glb', '.usdz').replace('.gltf', '.usdz')}
         camera-controls
         camera-orbit="0deg 75deg 105%"
         touch-action="pan-y"

@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation"
 const ModelViewerAR = dynamic(() => import("@/components/model-viewer-ar"), { ssr: false })
 const TryOnComponent = dynamic(() => import("@/components/try-on-component"), { ssr: false })
 const ARVirtualTryon = dynamic(() => import("@/components/ar-virtual-tryon"), { ssr: false })
+const AdvancedVRTryon = dynamic(() => import("@/components/advanced-vr-tryon"), { ssr: false })
 const TryOn3D = dynamic(() => import("@/components/tryon-3d"), { ssr: false })
 const ARTest = dynamic(() => import("@/components/ar-test"), { ssr: false })
 const ARDiagnostics = dynamic(() => import("@/components/ar-diagnostics"), { ssr: false })
@@ -26,6 +27,7 @@ export default function ProductDetailPage() {
   const addToCart = useCartStore((s) => s.add)
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const router = useRouter()
+  const [tryOnMode, setTryOnMode] = useState<'regular' | 'advanced'>('regular')
 
   useEffect(() => {
     if (!product) {
@@ -156,11 +158,11 @@ export default function ProductDetailPage() {
       </div>
       
       {/* Try On Modal */}
-      <dialog id="try-on-modal" className="backdrop:bg-black/60 bg-slate-900 rounded-lg p-0 max-w-5xl w-full max-h-[90vh] border border-slate-700">
+      <dialog id="try-on-modal" className="backdrop:bg-black/60 bg-slate-900 rounded-lg p-0 max-w-6xl w-full max-h-[95vh] border border-slate-700">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-2xl font-semibold text-white">AR Virtual Try-On</h2>
+              <h2 className="text-2xl font-semibold text-white">Virtual Try-On Experience</h2>
               <p className="text-slate-400 text-sm mt-1">{product.title} {selectedSize ? `- Size ${selectedSize}` : ''}</p>
             </div>
             <button
@@ -173,15 +175,61 @@ export default function ProductDetailPage() {
               ×
             </button>
           </div>
+          
+          {/* Mode Selection */}
+          <div className="mb-6">
+            <div className="flex items-center gap-4 mb-4">
+              <button
+                onClick={() => setTryOnMode('regular')}
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                  tryOnMode === 'regular'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                🎯 Smart Try-On
+              </button>
+              <button
+                onClick={() => setTryOnMode('advanced')}
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                  tryOnMode === 'advanced'
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                🧠 Advanced VR
+              </button>
+            </div>
+            <div className="text-sm text-slate-400">
+              {tryOnMode === 'regular' ? (
+                '• Quick and smooth AR experience with intelligent body tracking'
+              ) : (
+                '• Advanced computer vision with body segmentation and precise measurements'
+              )}
+            </div>
+          </div>
+          
           <ARErrorBoundary>
-            <ARVirtualTryon 
-              modelUrl={product.modelUrl} 
-              className="w-full"
-            />
+            {tryOnMode === 'regular' ? (
+              <ARVirtualTryon 
+                modelUrl={product.modelUrl} 
+                className="w-full"
+              />
+            ) : (
+              <AdvancedVRTryon 
+                modelUrl={product.modelUrl} 
+                className="w-full"
+              />
+            )}
           </ARErrorBoundary>
+          
           <div className="mt-4 text-center">
             <p className="text-slate-400 text-sm">
-              💡 Move naturally to see how {product.title} fits and looks on you
+              {tryOnMode === 'regular' ? (
+                `💡 Move naturally to see how ${product.title} fits and looks on you`
+              ) : (
+                '🔬 Advanced AI tracks your body precisely for the most realistic fitting experience'
+              )}
             </p>
           </div>
         </div>
