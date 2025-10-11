@@ -120,23 +120,64 @@ export default function ProductDetailPage() {
             <div className="flex gap-3">
               <Button
                 variant="outline"
-                onClick={() => {
-                  // Enable AR mode for viewing in space
+                onClick={async () => {
+                  // Find the model viewer element
                   const modelViewer = document.querySelector('model-viewer') as any
-                  if (modelViewer) {
+                  if (!modelViewer) {
+                    alert('3D model is loading. Please wait and try again.')
+                    return
+                  }
+
+                  try {
+                    console.log('Attempting to activate AR...')
+                    console.log('Model viewer AR capable:', modelViewer.canActivateAR)
+                    
+                    // Check device compatibility
+                    const userAgent = navigator.userAgent
+                    const isIOS = /iPad|iPhone|iPod/.test(userAgent)
+                    const isAndroid = /android/i.test(userAgent)
+                    const isMobile = isIOS || isAndroid
+                    
+                    if (!isMobile) {
+                      alert('AR viewing is best on mobile devices (iPhone/iPad or Android). For desktop, you can still rotate and interact with the 3D model above.')
+                      return
+                    }
+                    
+                    // Ensure AR attributes are set
                     modelViewer.setAttribute('ar', 'true')
                     modelViewer.setAttribute('ar-modes', 'webxr scene-viewer quick-look')
                     modelViewer.setAttribute('ar-placement', 'floor')
-                    // Trigger AR session
-                    modelViewer.activateAR().catch((error: any) => {
-                      console.error('AR activation failed:', error)
-                      alert('AR not available. Please use a compatible device or browser.')
-                    })
+                    modelViewer.setAttribute('ar-scale', 'auto')
+                    
+                    // Wait a moment for attributes to be processed
+                    await new Promise(resolve => setTimeout(resolve, 500))
+                    
+                    // Activate AR
+                    if (modelViewer.canActivateAR) {
+                      await modelViewer.activateAR()
+                      console.log('AR activated successfully')
+                    } else {
+                      throw new Error('AR not supported on this device')
+                    }
+                    
+                  } catch (error: any) {
+                    console.error('AR activation failed:', error)
+                    
+                    let message = 'AR viewing is not available. '
+                    if (error.message?.includes('not supported')) {
+                      message += 'This device may not support AR. Try using a newer mobile device with ARCore (Android) or ARKit (iOS) support.'
+                    } else if (error.message?.includes('permission')) {
+                      message += 'Camera permission is required. Please allow camera access and try again.'
+                    } else {
+                      message += 'Please try:\n• Using a mobile device\n• Allowing camera access\n• Using Chrome (Android) or Safari (iOS)'
+                    }
+                    
+                    alert(message)
                   }
                 }}
                 className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white font-semibold py-3"
               >
-                🌍 View in AR
+                📱 View in AR
               </Button>
               <Button
                 variant="outline"

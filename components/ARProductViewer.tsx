@@ -68,18 +68,38 @@ export default function ARProductViewer({ product, onAddToCart, onWishlist }: AR
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  // Initialize AR capabilities
+  // Initialize AR capabilities and model-viewer
   useEffect(() => {
+    // Load model-viewer script if not already loaded
+    if (!document.querySelector('script[src*="model-viewer"]')) {
+      const script = document.createElement('script')
+      script.type = 'module'
+      script.src = 'https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js'
+      document.head.appendChild(script)
+    }
+    
     const checkARSupport = async () => {
+      // Check for WebXR support
       if ('xr' in navigator) {
         try {
           // @ts-ignore
           const isSupported = await navigator.xr.isSessionSupported('immersive-ar')
-          console.log('AR Support:', isSupported)
+          console.log('WebXR AR Support:', isSupported)
         } catch (error) {
-          console.log('AR not supported:', error)
+          console.log('WebXR not supported, falling back to Scene Viewer:', error)
         }
       }
+      
+      // Check for ARCore/ARKit support (mobile)
+      const userAgent = navigator.userAgent || navigator.vendor
+      const isIOS = /iPad|iPhone|iPod/.test(userAgent)
+      const isAndroid = /android/i.test(userAgent)
+      
+      console.log('Device support:', {
+        iOS: isIOS,
+        Android: isAndroid,
+        hasCamera: 'mediaDevices' in navigator
+      })
     }
     
     checkARSupport()
@@ -257,17 +277,33 @@ export default function ARProductViewer({ product, onAddToCart, onWishlist }: AR
             ref={modelViewerRef}
             src={product.modelUrl}
             alt={product.name}
-            auto-rotate
+            ar
+            ar-modes="webxr scene-viewer quick-look"
+            ar-scale="fixed"
             camera-controls
+            touch-action="pan-y"
+            auto-rotate
             environment-image="neutral"
             shadow-intensity="1"
+            shadow-softness="1"
+            exposure="0.8"
             className="w-full h-full"
             style={{
-              transform: `scale(${modelScale}) rotateX(${modelRotation[0]}deg) rotateY(${modelRotation[1]}deg) rotateZ(${modelRotation[2]}deg)`
-            }}
+              backgroundColor: 'transparent'
+            } as React.CSSProperties}
           >
+            {/* AR Button */}
+            <button 
+              slot="ar-button"
+              className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg transition-colors"
+            >
+              <Smartphone className="w-4 h-4" />
+              View in AR
+            </button>
+            
+            {/* Instructions */}
             <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur rounded-lg p-2">
-              <p className="text-xs text-gray-600">Drag to rotate • Scroll to zoom</p>
+              <p className="text-xs text-gray-600">Drag to rotate • Pinch to zoom • AR button for camera</p>
             </div>
           </model-viewer>
           

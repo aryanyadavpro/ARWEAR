@@ -180,38 +180,58 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
     <div className="w-full">
       <model-viewer
         ref={viewerRef}
-        src={glbUrl}
+        src={glbUrl || 'https://modelviewer.dev/shared-assets/models/Astronaut.glb'}
         poster={poster}
         alt={alt}
         ar
         ar-modes="webxr scene-viewer quick-look"
-        ar-placement="wall"
-        ar-scale="1.0 1.0 1.0"
-        ar-persist="true"
-        ios-src={glbUrl.replace('.glb', '.usdz').replace('.gltf', '.usdz')}
+        ar-placement="floor"
+        ar-scale="auto"
         camera-controls
         camera-orbit="0deg 75deg 105%"
         touch-action="pan-y"
-        exposure="1"
+        exposure="0.8"
         auto-rotate
         auto-rotate-delay={3000}
         interaction-policy="allow-when-focused"
         loading="eager"
         reveal="auto"
-        scale="0.1 0.1 0.1"
+        scale="1 1 1"
+        shadow-intensity="1"
+        shadow-softness="0.5"
+        environment-image="neutral"
         onError={(e: any) => {
           console.error('Model Viewer Error:', e)
         }}
         onLoad={() => {
           console.log('Model loaded successfully')
+          // Enable AR capability check
+          setTimeout(() => {
+            if (viewerRef.current) {
+              console.log('AR support:', viewerRef.current.canActivateAR)
+            }
+          }, 1000)
         }}
         style={{
           width: "100%",
           height: "420px",
           borderRadius: "12px",
           overflow: "hidden",
+          backgroundColor: "#f8f9fa",
         }}
-      ></model-viewer>
+      >
+        {/* Custom AR Button */}
+        <button 
+          slot="ar-button"
+          onClick={activateAR}
+          className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg transition-colors font-medium"
+        >
+          📱 View in AR
+        </button>
+        
+        {/* Progress indicator */}
+        <div slot="progress-bar" className="bg-blue-600 h-1"></div>
+      </model-viewer>
 
       {/* Controls */}
       <div className="mt-4 flex flex-wrap items-center gap-3">

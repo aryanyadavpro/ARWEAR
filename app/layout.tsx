@@ -7,6 +7,7 @@ import "./globals.css"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { Suspense } from "react"
+import Script from 'next/script'
 import { AuthProvider } from "@/lib/auth-context"
 
 // Centralized site-wide metadata
@@ -65,6 +66,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Model Viewer for AR/3D functionality */}
+        <Script 
+          src="https://unpkg.com/@google/model-viewer@v3.4.0/dist/model-viewer.min.js" 
+          type="module"
+          strategy="beforeInteractive"
+        />
+      </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-slate-900 text-slate-100 antialiased`}>
         <AuthProvider>
           <Suspense fallback={
