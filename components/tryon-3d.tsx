@@ -354,9 +354,9 @@ export default function TryOn3D({ modelUrl, onReadyChange }: Props) {
         sceneRef.current.traverse(obj => {
           // @ts-ignore
           if (obj.geometry) obj.geometry.dispose?.()
-          // @ts-ignore
-          if (obj.material) {
-            const m: any = obj.material
+          // @ts-ignore - Three.js type casting
+          if ((obj as any).material) {
+            const m: any = (obj as any).material
             if (m.map) m.map.dispose?.()
             m.dispose?.()
           }

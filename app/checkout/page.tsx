@@ -8,7 +8,7 @@ import { useState } from "react"
 import { AlertCircle, CreditCard, ShoppingBag } from "lucide-react"
 
 export default function CheckoutPage() {
-  const { items, clear, getTotalPrice } = useCartStore()
+  const { items, clear, totalCents } = useCartStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -61,7 +61,7 @@ export default function CheckoutPage() {
     }
   }
 
-  const totalPrice = items.reduce((sum, item) => sum + (item.priceCents * item.qty), 0)
+  // Use totalCents from store
 
   return (
     <div className="min-h-screen bg-white">
@@ -100,7 +100,7 @@ export default function CheckoutPage() {
                     <div className="flex justify-between items-center">
                       <p className="text-lg font-semibold text-gray-900">Total</p>
                       <p className="text-lg font-bold text-violet-600">
-                        ₹{Math.round((totalPrice * 83) / 100)}
+                        ₹{Math.round((totalCents * 83) / 100)}
                       </p>
                     </div>
                   </div>
@@ -146,7 +146,7 @@ export default function CheckoutPage() {
                     Processing...
                   </>
                 ) : (
-                  `Pay ₹${Math.round((totalPrice * 83) / 100)} with Stripe`
+                  `Pay ₹${Math.round((totalCents * 83) / 100)} with Stripe`
                 )}
               </Button>
               
