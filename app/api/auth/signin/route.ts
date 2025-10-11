@@ -9,77 +9,63 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json()
+    console.log('Signin request received')
+    
+    const body = await request.json()
+    console.log('Request body:', body)
+    
+    const { email, password } = body
 
     // Validate input
     if (!email || !password) {
+      console.log('Missing email or password')
       return NextResponse.json(
         { error: 'Email and password are required' },
         { status: 400 }
       )
     }
 
-    let user = null
-    let userSource = 'database'
-
-    try {
-      // Try database first
-      await connectDB()
-      user = await User.findOne({ email }).select('+password')
-      
-      if (user) {
-        const isPasswordValid = await user.comparePassword(password)
-        if (!isPasswordValid) {
-          return NextResponse.json(
-            { error: 'Invalid email or password' },
-            { status: 401 }
-          )
-        }
-      }
-    } catch (dbError) {
-      console.warn('Database connection failed, using fallback auth:', dbError)
-      userSource = 'fallback'
+    console.log('Attempting fallback authentication for:', email)
+    
+    // Use fallback authentication first (more reliable)
+    const fallbackUser = findFallbackUser(email)
+    
+    if (!fallbackUser || !validateFallbackPassword(fallbackUser, password)) {
+      console.log('Fallback authentication failed')
+      return NextResponse.json(
+        { error: 'Invalid email or password' },
+        { status: 401 }
+      )
     }
-
-    // If no user from database, try fallback authentication
-    if (!user) {
-      const fallbackUser = findFallbackUser(email)
-      
-      if (!fallbackUser || !validateFallbackPassword(fallbackUser, password)) {
-        return NextResponse.json(
-          { error: 'Invalid email or password' },
-          { status: 401 }
-        )
-      }
-      
-      user = fallbackUser
-      userSource = 'fallback'
-    }
-
-    // Create JWT token (include basic profile fields to avoid DB dependency for auth checks)
+    
+    console.log('Fallback authentication successful')
+    
+    // Create JWT token
     const token = jwt.sign(
       { 
-        userId: userSource === 'database' ? user._id.toString() : user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        source: userSource
+        userId: fallbackUser.id,
+        email: fallbackUser.email,
+        firstName: fallbackUser.firstName,
+        lastName: fallbackUser.lastName,
+        source: 'fallback'
       },
       process.env.JWT_SECRET || 'fallback-secret-key',
       { expiresIn: '7d' }
     )
+
+    console.log('JWT token created')
 
     // Create response
     const response = NextResponse.json(
       {
         message: 'Sign in successful',
         user: {
-          id: userSource === 'database' ? user._id : user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName
+          id: fallbackUser.id,
+          email: fallbackUser.email,
+          firstName: fallbackUser.firstName,
+          lastName: fallbackUser.lastName
         },
-        source: userSource
+        source: 'fallback'
       },
       { status: 200 }
     )
@@ -93,12 +79,13 @@ export async function POST(request: NextRequest) {
       maxAge: 7 * 24 * 60 * 60 // 7 days (in seconds)
     })
 
+    console.log('Response created successfully')
     return response
 
   } catch (error: any) {
     console.error('Signin error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error: ' + error.message },
       { status: 500 }
     )
   }

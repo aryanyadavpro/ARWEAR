@@ -58,24 +58,30 @@ export default function SignInPage() {
         throw new Error(data.error || 'Login failed')
       }
 
+      console.log('Sign-in successful, updating auth context')
+      
       // Update auth context with user data
       login(data.user)
       
-      // Force a small delay to ensure auth context is updated
-      await new Promise(resolve => setTimeout(resolve, 100))
+      console.log('Auth context updated, redirecting...')
       
       // Login successful, redirect to products page or back to where user came from
       const urlParams = new URLSearchParams(window.location.search)
       const from = urlParams.get('from')
       
-      // Use window.location.href for more reliable redirect
+      // Use router for navigation in Next.js
       if (from && from !== '/sign-in' && from !== '/sign-up') {
-        window.location.href = from
+        router.push(from)
       } else {
-        window.location.href = '/products'
+        router.push('/products')
       }
     } catch (err: any) {
       console.error('Sign-in error:', err)
+      console.error('Error details:', {
+        message: err.message,
+        status: err.status,
+        response: err.response
+      })
       setError(err.message || "Login failed. Please check your credentials.")
       setLoading(false)
     }

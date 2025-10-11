@@ -83,16 +83,22 @@ export default function SignUpPage() {
         throw new Error(data.error || 'Registration failed')
       }
 
+      console.log('Sign-up successful, updating auth context')
+      
       // Update auth context with user data
       login(data.user)
       
-      // Force a small delay to ensure auth context is updated
-      await new Promise(resolve => setTimeout(resolve, 100))
+      console.log('Auth context updated, redirecting...')
       
       // Registration successful, redirect to products page
-      window.location.href = '/products'
+      router.push('/products')
     } catch (err: any) {
       console.error('Sign-up error:', err)
+      console.error('Error details:', {
+        message: err.message,
+        status: err.status,
+        response: err.response
+      })
       setError(err.message || "Registration failed. Please try again.")
       setLoading(false)
     }
