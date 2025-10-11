@@ -1,6 +1,6 @@
 "use client"
 
-import { loadStripe } from "@stripe/stripe-js"
+import { loadStripe, Stripe } from "@stripe/stripe-js"
 import { useCartStore } from "@/store/cart-store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -41,14 +41,16 @@ export default function CheckoutPage() {
           throw new Error("Stripe public key is not configured. Please check your environment variables.")
         }
         
-        const stripe = await loadStripe(stripePublicKey)
-        if (!stripe) {
-          throw new Error("Failed to load Stripe. Please check your internet connection and try again.")
-        }
-        
-        const { error } = await stripe.redirectToCheckout({ sessionId: data.sessionId })
-        if (error) {
-          throw new Error(error.message || "An error occurred while redirecting to checkout.")
+        // For modern Stripe.js, we use the session URL directly
+        if (data.url) {
+          // Redirect to Stripe Checkout using the URL
+          window.location.href = data.url
+        } else if (data.sessionId) {
+          // Fallback: construct Stripe checkout URL manually
+          const checkoutUrl = `https://checkout.stripe.com/pay/${data.sessionId}`
+          window.location.href = checkoutUrl
+        } else {
+          throw new Error("No checkout URL or session ID received from server.")
         }
       } else {
         throw new Error("No session ID returned from server. Please try again.")

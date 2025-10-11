@@ -62,7 +62,10 @@ export async function POST(req: Request) {
       },
     })
 
-    return NextResponse.json({ sessionId: session.id })
+    return NextResponse.json({ 
+      sessionId: session.id,
+      url: session.url 
+    })
   } catch (e: any) {
     console.error("Checkout error:", e)
     
