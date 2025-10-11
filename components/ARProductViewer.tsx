@@ -219,6 +219,7 @@ export default function ARProductViewer({ product, onAddToCart, onWishlist }: AR
   const handleAddToCart = () => {
     if (onAddToCart) {
       onAddToCart(product, { color: selectedColor, size: selectedSize })
+      alert(`Added ${product.name} to cart!\nColor: ${selectedColor}\nSize: ${selectedSize}`)
     }
   }
 
@@ -226,6 +227,7 @@ export default function ARProductViewer({ product, onAddToCart, onWishlist }: AR
     setIsWishlisted(!isWishlisted)
     if (onWishlist) {
       onWishlist(product)
+      alert(`${isWishlisted ? 'Removed from' : 'Added to'} wishlist: ${product.name}`)
     }
   }
 

@@ -357,6 +357,21 @@ export class FallbackDataService {
     return { insertedId: newProduct.id }
   }
 
+  async updateProduct(id: string, updates: any) {
+    const index = this.products.findIndex(p => p.id === id)
+    if (index === -1) {
+      return { matchedCount: 0, modifiedCount: 0 }
+    }
+    
+    this.products[index] = {
+      ...this.products[index],
+      ...updates,
+      updatedAt: new Date()
+    }
+    
+    return { matchedCount: 1, modifiedCount: 1 }
+  }
+
   async getUserByEmail(email: string) {
     return this.users.find(u => u.email === email) || null
   }
@@ -445,6 +460,18 @@ export class UniversalDatabaseService {
     }
 
     return await fallbackService.createProduct(product)
+  }
+
+  async updateProduct(id: string, updates: any) {
+    try {
+      if (await this.checkDatabaseHealth()) {
+        return await databaseService.updateProduct(id, updates)
+      }
+    } catch (error) {
+      console.log('Database operation failed, using fallback:', error)
+    }
+
+    return await fallbackService.updateProduct(id, updates)
   }
 
   async getUserByEmail(email: string) {
