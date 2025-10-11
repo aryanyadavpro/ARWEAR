@@ -46,9 +46,10 @@ export default function SignInPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: formData.email,
+          email: formData.email.toLowerCase().trim(),
           password: formData.password
         }),
+        credentials: 'include' // Important for cookies
       })
 
       const data = await response.json()
@@ -60,18 +61,22 @@ export default function SignInPage() {
       // Update auth context with user data
       login(data.user)
       
+      // Force a small delay to ensure auth context is updated
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
       // Login successful, redirect to products page or back to where user came from
       const urlParams = new URLSearchParams(window.location.search)
       const from = urlParams.get('from')
       
-      if (from && from !== '/sign-in') {
-        router.push(from)
+      // Use window.location.href for more reliable redirect
+      if (from && from !== '/sign-in' && from !== '/sign-up') {
+        window.location.href = from
       } else {
-        router.push('/products')
+        window.location.href = '/products'
       }
     } catch (err: any) {
+      console.error('Sign-in error:', err)
       setError(err.message || "Login failed. Please check your credentials.")
-    } finally {
       setLoading(false)
     }
   }
@@ -114,13 +119,24 @@ export default function SignInPage() {
             </div>
             
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded border border-red-200">
                 {error}
               </div>
             )}
             
+            {loading && (
+              <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded border border-blue-200">
+                🔄 Signing you in... Please wait.
+              </div>
+            )}
+            
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing In..." : "Sign In"}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Signing In...
+                </span>
+              ) : "Sign In"}
             </Button>
           </form>
           

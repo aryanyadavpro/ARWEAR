@@ -36,7 +36,7 @@ export default function SignUpPage() {
     setLoading(true)
 
     // Basic validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.password) {
       setError("All fields are required")
       setLoading(false)
       return
@@ -54,6 +54,14 @@ export default function SignUpPage() {
       return
     }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email.trim())) {
+      setError("Please enter a valid email address")
+      setLoading(false)
+      return
+    }
+
     try {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
@@ -61,11 +69,12 @@ export default function SignUpPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
+          email: formData.email.toLowerCase().trim(),
           password: formData.password
         }),
+        credentials: 'include' // Important for cookies
       })
 
       const data = await response.json()
@@ -77,11 +86,14 @@ export default function SignUpPage() {
       // Update auth context with user data
       login(data.user)
       
-      // Registration successful, redirect to product page
-      router.push('/product')
+      // Force a small delay to ensure auth context is updated
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Registration successful, redirect to products page
+      window.location.href = '/products'
     } catch (err: any) {
+      console.error('Sign-up error:', err)
       setError(err.message || "Registration failed. Please try again.")
-    } finally {
       setLoading(false)
     }
   }
@@ -168,13 +180,24 @@ export default function SignUpPage() {
             </div>
             
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded border border-red-200">
                 {error}
               </div>
             )}
             
+            {loading && (
+              <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded border border-blue-200">
+                🔄 Creating your account... Please wait.
+              </div>
+            )}
+            
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating Account..." : "Create Account"}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Creating Account...
+                </span>
+              ) : "Create Account"}
             </Button>
           </form>
           

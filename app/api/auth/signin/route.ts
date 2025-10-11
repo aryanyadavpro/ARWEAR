@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
 import jwt from 'jsonwebtoken'
+import { findFallbackUser, validateFallbackPassword, sanitizeFallbackUser } from '@/lib/fallback-auth'
 
 // This route needs to be dynamic as it sets cookies
 export const dynamic = 'force-dynamic'
@@ -18,36 +19,53 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Connect to database
-    await connectDB()
+    let user = null
+    let userSource = 'database'
 
-    // Find user and include password field for comparison
-    const user = await User.findOne({ email }).select('+password')
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      )
+    try {
+      // Try database first
+      await connectDB()
+      user = await User.findOne({ email }).select('+password')
+      
+      if (user) {
+        const isPasswordValid = await user.comparePassword(password)
+        if (!isPasswordValid) {
+          return NextResponse.json(
+            { error: 'Invalid email or password' },
+            { status: 401 }
+          )
+        }
+      }
+    } catch (dbError) {
+      console.warn('Database connection failed, using fallback auth:', dbError)
+      userSource = 'fallback'
     }
 
-    // Check password
-    const isPasswordValid = await user.comparePassword(password)
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      )
+    // If no user from database, try fallback authentication
+    if (!user) {
+      const fallbackUser = findFallbackUser(email)
+      
+      if (!fallbackUser || !validateFallbackPassword(fallbackUser, password)) {
+        return NextResponse.json(
+          { error: 'Invalid email or password' },
+          { status: 401 }
+        )
+      }
+      
+      user = fallbackUser
+      userSource = 'fallback'
     }
 
     // Create JWT token (include basic profile fields to avoid DB dependency for auth checks)
     const token = jwt.sign(
       { 
-        userId: user._id.toString(),
+        userId: userSource === 'database' ? user._id.toString() : user.id,
         email: user.email,
         firstName: user.firstName,
-        lastName: user.lastName
+        lastName: user.lastName,
+        source: userSource
       },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET || 'fallback-secret-key',
       { expiresIn: '7d' }
     )
 
@@ -56,11 +74,12 @@ export async function POST(request: NextRequest) {
       {
         message: 'Sign in successful',
         user: {
-          id: user._id,
+          id: userSource === 'database' ? user._id : user.id,
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName
-        }
+        },
+        source: userSource
       },
       { status: 200 }
     )
