@@ -27,6 +27,7 @@ export default function ProductDetailPage() {
   const product = useMemo(() => seedProducts.find((p) => p.id === params.id), [params.id])
   const addToCart = useCartStore((s) => s.add)
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
+  const [isAddingToCart, setIsAddingToCart] = useState(false)
   const router = useRouter()
   const [tryOnMode, setTryOnMode] = useState<'regular' | 'advanced' | 'mobile'>('regular')
   const [isMobile, setIsMobile] = useState(false)
@@ -49,6 +50,40 @@ export default function ProductDetailPage() {
       setTryOnMode('mobile')
     }
   }, [])
+
+  const handleAddToCart = async () => {
+    if (!product || !selectedSize) return
+    
+    setIsAddingToCart(true)
+    try {
+      addToCart({
+        productId: product.id,
+        title: product.title,
+        priceCents: product.priceCents,
+        qty: 1,
+        size: selectedSize,
+        previewImage: product.previewImage,
+      })
+      
+      // Show success feedback
+      const button = document.querySelector('[data-add-to-cart-btn]') as HTMLButtonElement
+      if (button) {
+        const originalText = button.textContent
+        button.textContent = '✅ Added to Cart!'
+        button.style.background = 'linear-gradient(to right, #10b981, #059669)'
+        
+        setTimeout(() => {
+          button.textContent = originalText
+          button.style.background = ''
+        }, 2000)
+      }
+    } catch (error) {
+      console.error('Failed to add to cart:', error)
+      alert('Failed to add item to cart. Please try again.')
+    } finally {
+      setIsAddingToCart(false)
+    }
+  }
 
   if (!product) {
     return <div className="mx-auto max-w-4xl px-4 py-8">Product not found.</div>
@@ -113,23 +148,13 @@ export default function ProductDetailPage() {
 
           <div className="mt-8 space-y-4">
             <Button
-              onClick={() =>
-                product &&
-                selectedSize &&
-                addToCart({
-                  productId: product.id,
-                  title: product.title,
-                  priceCents: product.priceCents,
-                  qty: 1,
-                  size: selectedSize,
-                  previewImage: product.previewImage,
-                })
-              }
-              disabled={!selectedSize}
-              aria-disabled={!selectedSize}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 text-lg shadow-lg"
+              onClick={handleAddToCart}
+              disabled={!selectedSize || isAddingToCart}
+              aria-disabled={!selectedSize || isAddingToCart}
+              data-add-to-cart-btn
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 text-lg shadow-lg disabled:opacity-50"
             >
-              {!selectedSize ? "Select size to add to cart" : `Add to cart - ${formatInrFromUsdCents(product.priceCents)}`}
+              {isAddingToCart ? "Adding..." : !selectedSize ? "Select size to add to cart" : `Add to cart - ${formatInrFromUsdCents(product.priceCents)}`}
             </Button>
             
             <div className="flex gap-3">

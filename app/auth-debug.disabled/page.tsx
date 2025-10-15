@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/lib/auth-context'
-import AuthDebugEnhanced from '@/components/auth-debug-enhanced'
+// import AuthDebugEnhanced from '@/components/auth-debug-enhanced'
 import Link from 'next/link'
 import { ArrowLeft, User, LogOut } from 'lucide-react'
 
@@ -140,7 +140,7 @@ export default function AuthDebugPage() {
         </Card>
 
         {/* Authentication Testing Tool */}
-        <AuthDebugEnhanced />
+        {/* <AuthDebugEnhanced /> */}
 
         {/* Test Accounts Reference */}
         <Card className="bg-slate-800/50 border-slate-700">

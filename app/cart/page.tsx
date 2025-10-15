@@ -7,7 +7,7 @@ import { formatInrFromUsdCents } from "@/lib/utils"
 import { useCartStore } from "@/store/cart-store"
 
 export default function CartPage() {
-  const { items, remove, totalCents } = useCartStore()
+  const { items, remove, getTotalPrice } = useCartStore()
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
@@ -47,7 +47,7 @@ export default function CartPage() {
           ))}
           <div className="flex items-center justify-between pt-4 border-t">
             <p className="text-lg font-medium">Total</p>
-            <p className="text-lg font-semibold">{formatInrFromUsdCents(totalCents)}</p>
+            <p className="text-lg font-semibold">{formatInrFromUsdCents(getTotalPrice())}</p>
           </div>
           <div className="flex justify-end">
             <Button asChild>

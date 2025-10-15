@@ -15,8 +15,9 @@ type CartState = {
   items: CartItem[]
   add: (item: CartItem) => void
   remove: (productId: string, size: string) => void
+  updateQuantity: (productId: string, size: string, qty: number) => void
+  getItemCount: () => number
   clear: () => void
-  totalCents: number
   getTotalPrice: () => number
 }
 
@@ -32,10 +33,17 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
   remove: (productId, size) =>
     set({ items: get().items.filter((i) => !(i.productId === productId && i.size === size)) }),
-  clear: () => set({ items: [] }),
-  get totalCents() {
-    return get().items.reduce((sum, i) => sum + i.priceCents * i.qty, 0)
+  updateQuantity: (productId, size, qty) => {
+    if (qty <= 0) {
+      set({ items: get().items.filter((i) => !(i.productId === productId && i.size === size)) })
+      return
+    }
+    set({ items: get().items.map((i) => (i.productId === productId && i.size === size ? { ...i, qty } : i)) })
   },
+  getItemCount: () => {
+    return get().items.reduce((count, i) => count + i.qty, 0)
+  },
+  clear: () => set({ items: [] }),
   getTotalPrice: () => {
     return get().items.reduce((sum, i) => sum + i.priceCents * i.qty, 0)
   },

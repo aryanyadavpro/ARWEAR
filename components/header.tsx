@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation"
 import { handleSmoothScroll } from "@/lib/smooth-scroll"
 
 export default function Header() {
-  const count = useCartStore((s) => s.items.length)
+  const count = useCartStore((s) => s.getItemCount())
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { user, logout, loading } = useAuth()
   const router = useRouter()
