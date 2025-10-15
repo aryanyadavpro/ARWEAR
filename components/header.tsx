@@ -6,11 +6,27 @@ import { useCartStore } from "@/store/cart-store"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
+import { handleSmoothScroll } from "@/lib/smooth-scroll"
 
 export default function Header() {
   const count = useCartStore((s) => s.items.length)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { user, logout, loading } = useAuth()
+  const router = useRouter()
+  
+  const handleNavClick = (href: string) => {
+    if (!handleSmoothScroll(href)) {
+      router.push(href)
+    }
+  }
+  
+  const handleMobileNavClick = (href: string) => {
+    if (!handleSmoothScroll(href, () => setMobileMenuOpen(false))) {
+      router.push(href)
+      setMobileMenuOpen(false)
+    }
+  }
   
   return (
     <header className="border-b border-slate-700 bg-slate-900 sticky top-0 z-50 shadow-sm">
@@ -33,12 +49,18 @@ export default function Header() {
           
           {/* Navigation Links - always show */}
           <nav className="flex items-center gap-6">
-            <Link href="/products" className="text-slate-300 hover:text-white transition-colors font-medium">
+            <button 
+              onClick={() => handleNavClick('/products')} 
+              className="text-slate-300 hover:text-white transition-colors font-medium cursor-pointer"
+            >
               Products
-            </Link>
-            <Link href="/#features" className="text-slate-300 hover:text-white transition-colors font-medium">
+            </button>
+            <button 
+              onClick={() => handleNavClick('/#features')} 
+              className="text-slate-300 hover:text-white transition-colors font-medium cursor-pointer"
+            >
               Features
-            </Link>
+            </button>
           </nav>
           
           <div className="flex items-center gap-3 ml-4">
@@ -113,20 +135,18 @@ export default function Header() {
         <div className="md:hidden border-t border-slate-700 bg-slate-900">
           <div className="px-4 py-4 space-y-3">
             {/* Always show Products and Features links */}
-            <Link 
-              href="/products" 
-              className="block text-slate-300 hover:text-white transition-colors font-medium py-2"
-              onClick={() => setMobileMenuOpen(false)}
+            <button 
+              onClick={() => handleMobileNavClick('/products')}
+              className="block text-slate-300 hover:text-white transition-colors font-medium py-2 text-left w-full"
             >
               Products
-            </Link>
-            <Link 
-              href="/#features" 
-              className="block text-slate-300 hover:text-white transition-colors font-medium py-2"
-              onClick={() => setMobileMenuOpen(false)}
+            </button>
+            <button 
+              onClick={() => handleMobileNavClick('/#features')}
+              className="block text-slate-300 hover:text-white transition-colors font-medium py-2 text-left w-full"
             >
               Features
-            </Link>
+            </button>
             <div className="flex flex-col gap-2 pt-2 border-t border-slate-700">
               {loading ? (
                 <div className="flex justify-center py-2">

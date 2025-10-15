@@ -1,7 +1,5 @@
 import mongoose from 'mongoose'
 
-const MONGODB_DB = process.env.MONGODB_DB
-
 // Global is used here to maintain a cached connection across hot reloads
 // in development. This prevents connections growing exponentially
 // during API Route usage.
@@ -34,8 +32,6 @@ async function connectDB() {
   if (!cached!.promise) {
     const opts = {
       bufferCommands: false,
-      // Use dbName if provided via env; otherwise, the db from the URI (or 'test') will be used
-      dbName: MONGODB_DB,
       // Fail fast if the cluster is unreachable
       serverSelectionTimeoutMS: 10000,
     } as const

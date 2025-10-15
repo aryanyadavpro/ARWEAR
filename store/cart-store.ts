@@ -17,6 +17,7 @@ type CartState = {
   remove: (productId: string, size: string) => void
   clear: () => void
   totalCents: number
+  getTotalPrice: () => number
 }
 
 export const useCartStore = create<CartState>((set, get) => ({
@@ -33,6 +34,9 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ items: get().items.filter((i) => !(i.productId === productId && i.size === size)) }),
   clear: () => set({ items: [] }),
   get totalCents() {
+    return get().items.reduce((sum, i) => sum + i.priceCents * i.qty, 0)
+  },
+  getTotalPrice: () => {
     return get().items.reduce((sum, i) => sum + i.priceCents * i.qty, 0)
   },
 }))

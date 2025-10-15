@@ -51,6 +51,7 @@ export function AuthProvider({ children }: { children: any }) {
           setTimeout(() => checkAuth(1), 1000)
           return
         }
+        console.error('Auth check failed with status:', response.status)
         setUser(null)
       }
     } catch (error) {
@@ -63,9 +64,9 @@ export function AuthProvider({ children }: { children: any }) {
       }
       setUser(null)
     } finally {
-      if (retryCount > 0 || !/Mobi|Android/i.test(navigator.userAgent)) {
-        setLoading(false)
-      }
+      // Always set loading to false after auth check completes
+      // This ensures loading state is properly reset in all scenarios
+      setLoading(false)
     }
   }
 

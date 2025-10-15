@@ -1,6 +1,6 @@
 "use client"
 
-import { loadStripe, Stripe } from "@stripe/stripe-js"
+import { loadStripe } from "@stripe/stripe-js"
 import { useCartStore } from "@/store/cart-store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,7 +8,7 @@ import { useState } from "react"
 import { AlertCircle, CreditCard, ShoppingBag } from "lucide-react"
 
 export default function CheckoutPage() {
-  const { items, clear, totalCents } = useCartStore()
+  const { items, clear, getTotalPrice } = useCartStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -41,16 +41,15 @@ export default function CheckoutPage() {
           throw new Error("Stripe public key is not configured. Please check your environment variables.")
         }
         
-        // For modern Stripe.js, we use the session URL directly
-        if (data.url) {
-          // Redirect to Stripe Checkout using the URL
-          window.location.href = data.url
-        } else if (data.sessionId) {
-          // Fallback: construct Stripe checkout URL manually
-          const checkoutUrl = `https://checkout.stripe.com/pay/${data.sessionId}`
-          window.location.href = checkoutUrl
-        } else {
-          throw new Error("No checkout URL or session ID received from server.")
+        const stripe = await loadStripe(stripePublicKey)
+        if (!stripe) {
+          throw new Error("Failed to load Stripe. Please check your internet connection and try again.")
+        }
+        
+        // Use redirectToCheckout with proper typing
+        const { error } = await (stripe as any).redirectToCheckout({ sessionId: data.sessionId })
+        if (error) {
+          throw new Error(error.message || "An error occurred while redirecting to checkout.")
         }
       } else {
         throw new Error("No session ID returned from server. Please try again.")
@@ -63,7 +62,7 @@ export default function CheckoutPage() {
     }
   }
 
-  // Use totalCents from store
+  const totalPrice = getTotalPrice()
 
   return (
     <div className="min-h-screen bg-white">
@@ -102,7 +101,7 @@ export default function CheckoutPage() {
                     <div className="flex justify-between items-center">
                       <p className="text-lg font-semibold text-gray-900">Total</p>
                       <p className="text-lg font-bold text-violet-600">
-                        ₹{Math.round((totalCents * 83) / 100)}
+                        ₹{Math.round((totalPrice * 83) / 100)}
                       </p>
                     </div>
                   </div>
@@ -148,7 +147,7 @@ export default function CheckoutPage() {
                     Processing...
                   </>
                 ) : (
-                  `Pay ₹${Math.round((totalCents * 83) / 100)} with Stripe`
+                  `Pay ₹${Math.round((totalPrice * 83) / 100)} with Stripe`
                 )}
               </Button>
               

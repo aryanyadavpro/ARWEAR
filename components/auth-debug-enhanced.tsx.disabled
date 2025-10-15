@@ -1,0 +1,162 @@
+"use client"
+
+import { useState } from 'react'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+
+export default function AuthDebugEnhanced() {
+  const [testEmail, setTestEmail] = useState('')
+  const [testPassword, setTestPassword] = useState('')
+  const [testResult, setTestResult] = useState<any>(null)
+  const [isTesting, setIsTesting] = useState(false)
+
+  const testAuth = async (email: string, password: string) => {
+    setIsTesting(true)
+    setTestResult(null)
+    
+    try {
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include'
+      })
+
+      const data = await response.json()
+      
+      setTestResult({
+        success: response.ok,
+        status: response.status,
+        statusText: response.statusText,
+        data: data,
+        timestamp: new Date().toLocaleTimeString()
+      })
+    } catch (error: any) {
+      setTestResult({
+        success: false,
+        error: error.message,
+        timestamp: new Date().toLocaleTimeString()
+      })
+    } finally {
+      setIsTesting(false)
+    }
+  }
+
+  const testCredentials = [
+    { email: 'test@example.com', password: 'password123', name: 'Test User' },
+    { email: 'demo@arwear.com', password: 'demo123', name: 'Demo User' },
+    { email: 'admin@arwear.com', password: 'admin123', name: 'Admin User' },
+    { email: 'user@test.com', password: '123456', name: 'Sample User' },
+    { email: 'invalid@test.com', password: 'wrong', name: 'Invalid User (Test)' },
+  ]
+
+  return (
+    <Card className="w-full max-w-2xl mx-auto bg-slate-800/50 border-slate-700">
+      <CardHeader>
+        <CardTitle className="text-white flex items-center gap-2">
+          🔍 Authentication Debug Tool
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Manual Test */}
+        <div className="space-y-2">
+          <h3 className="text-slate-200 font-medium">Manual Test</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <Input
+              placeholder="Email"
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              className="bg-slate-700 border-slate-600 text-white"
+            />
+            <Input
+              placeholder="Password"
+              type="password"
+              value={testPassword}
+              onChange={(e) => setTestPassword(e.target.value)}
+              className="bg-slate-700 border-slate-600 text-white"
+            />
+            <Button
+              onClick={() => testAuth(testEmail, testPassword)}
+              disabled={isTesting || !testEmail || !testPassword}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isTesting ? 'Testing...' : 'Test'}
+            </Button>
+          </div>
+        </div>
+
+        {/* Quick Test Buttons */}
+        <div className="space-y-2">
+          <h3 className="text-slate-200 font-medium">Quick Tests</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {testCredentials.map((cred, index) => (
+              <Button
+                key={index}
+                onClick={() => testAuth(cred.email, cred.password)}
+                disabled={isTesting}
+                variant="outline"
+                size="sm"
+                className={`text-left justify-start border-slate-600 text-slate-300 hover:bg-slate-700 ${
+                  cred.name.includes('Invalid') ? 'border-red-600 text-red-300' : ''
+                }`}
+              >
+                {cred.name}
+                <span className="text-xs opacity-70 ml-2">
+                  ({cred.email})
+                </span>
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Results */}
+        {testResult && (
+          <div className="space-y-2">
+            <h3 className="text-slate-200 font-medium">Test Result ({testResult.timestamp})</h3>
+            <div className={`p-3 rounded border text-sm font-mono ${
+              testResult.success 
+                ? 'bg-green-500/10 border-green-500/30 text-green-300'
+                : 'bg-red-500/10 border-red-500/30 text-red-300'
+            }`}>
+              <div className="mb-2">
+                <strong>Status:</strong> {testResult.success ? '✅ SUCCESS' : '❌ FAILED'}
+                {testResult.status && (
+                  <span className="ml-2">({testResult.status} {testResult.statusText})</span>
+                )}
+              </div>
+              
+              {testResult.data && (
+                <div className="mb-2">
+                  <strong>Response:</strong>
+                  <pre className="mt-1 text-xs bg-black/30 p-2 rounded overflow-auto">
+                    {JSON.stringify(testResult.data, null, 2)}
+                  </pre>
+                </div>
+              )}
+              
+              {testResult.error && (
+                <div>
+                  <strong>Error:</strong> {testResult.error}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Instructions */}
+        <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded text-sm text-blue-300">
+          <strong>💡 How to use:</strong>
+          <ul className="mt-1 space-y-1 text-xs">
+            <li>• Click any "Quick Test" button to test pre-configured credentials</li>
+            <li>• Use "Manual Test" to test custom email/password combinations</li>
+            <li>• Check the console logs for detailed server-side debug information</li>
+            <li>• Valid test accounts are created automatically in the fallback auth system</li>
+          </ul>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}

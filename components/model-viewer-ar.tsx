@@ -88,28 +88,53 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
         throw new Error('AR requires a secure context (HTTPS)')
       }
 
-      // Prefer Android Scene Viewer when on Android
-      if (isAndroid && viewerRef.current?.canActivateAR) {
+      // Force enable AR attributes
+      viewerRef.current.setAttribute('ar', '')
+      viewerRef.current.setAttribute('ar-modes', 'webxr scene-viewer quick-look')
+      viewerRef.current.setAttribute('ar-placement', 'floor')
+      viewerRef.current.setAttribute('ar-scale', 'auto')
+      
+      // Wait for attributes to be processed
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      // Check mobile platform and prefer appropriate AR mode
+      if (isAndroid) {
+        // Android: Try Scene Viewer first
+        const sceneViewerUrl = `intent://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(glbUrl)}&mode=ar_only&resizable=false#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(window.location.href)};end;`
+        
+        try {
+          // Try model-viewer AR activation first
+          if (viewerRef.current.canActivateAR) {
+            await viewerRef.current.activateAR()
+            return
+          } else {
+            // Fallback to direct Scene Viewer intent
+            window.location.href = sceneViewerUrl
+            return
+          }
+        } catch (sceneViewerError) {
+          // If Scene Viewer fails, try WebXR
+          console.log('Scene Viewer failed, trying WebXR:', sceneViewerError)
+        }
+      }
+
+      // iOS or WebXR fallback
+      if (viewerRef.current.canActivateAR) {
         await viewerRef.current.activateAR()
         return
       }
 
-      // Check WebXR support first (for browsers with WebXR AR)
-      if ('xr' in navigator && 'XRSystem' in window && !isAndroid) {
-        const xr = navigator.xr as any
-        const isSupported = await xr.isSessionSupported('immersive-ar')
-        if (!isSupported) {
-          throw new Error('WebXR AR not supported')
-        }
+      // Final fallback for iOS Quick Look
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        const quickLookUrl = `${glbUrl}#allowsContentScaling=0`
+        const a = document.createElement('a')
+        a.href = quickLookUrl
+        a.rel = 'ar'
+        a.click()
+        return
       }
 
-      // Check model-viewer AR capability
-      if (!viewerRef.current.canActivateAR) {
-        throw new Error('Model viewer AR not available')
-      }
-      
-      // Attempt to activate AR (will route to Scene Viewer on Android or WebXR/Quick Look otherwise)
-      await viewerRef.current.activateAR()
+      throw new Error('AR not supported on this device')
       
     } catch (error: any) {
       console.error("AR activation failed:", error)
@@ -185,21 +210,24 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
         alt={alt}
         ar
         ar-modes="webxr scene-viewer quick-look"
-        ar-placement="floor"
+        ar-placement="wall"
         ar-scale="auto"
         camera-controls
         camera-orbit="0deg 75deg 105%"
-        touch-action="pan-y"
-        exposure="0.8"
+        touch-action="manipulation"
+        exposure="1.0"
         auto-rotate
         auto-rotate-delay={3000}
         interaction-policy="allow-when-focused"
         loading="eager"
         reveal="auto"
         scale="1 1 1"
-        shadow-intensity="1"
-        shadow-softness="0.5"
+        shadow-intensity="0.8"
+        shadow-softness="0.3"
         environment-image="neutral"
+        ios-src={glbUrl}
+        quick-look-browsers="safari chrome firefox"
+        ar-hit-test="false"
         onError={(e: any) => {
           console.error('Model Viewer Error:', e)
         }}

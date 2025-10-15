@@ -1,11 +1,27 @@
 "use client"
 
+import { useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import ProductList from "@/components/product-list"
 import { ArrowRight, Smartphone, Globe, Shield, Zap, Star, Users, TrendingUp } from "lucide-react"
+import { smoothScrollToSection } from "@/lib/smooth-scroll"
 
 export default function HomePage() {
+  // Handle hash-based navigation on page load
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash) {
+      // Small delay to ensure page is fully rendered
+      const timer = setTimeout(() => {
+        const sectionId = hash.substring(1)
+        smoothScrollToSection(sectionId)
+      }, 100)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [])
+  
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -38,8 +54,13 @@ export default function HomePage() {
                 <ArrowRight className="h-5 w-5" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="border-gray-300 text-gray-700 hover:bg-gray-50 text-lg px-8 py-3 hover:scale-105 transition-all duration-200">
-              <Link href="#features">Learn More</Link>
+            <Button 
+              onClick={() => smoothScrollToSection('features')} 
+              variant="outline" 
+              size="lg" 
+              className="border-gray-300 text-gray-700 hover:bg-gray-50 text-lg px-8 py-3 hover:scale-105 transition-all duration-200"
+            >
+              Learn More
             </Button>
           </div>
           
@@ -138,7 +159,7 @@ export default function HomePage() {
       </section>
 
       {/* Products Section */}
-      <section className="py-20 px-4 bg-gray-50">
+      <section id="products" className="py-20 px-4 bg-gray-50">
         <div className="mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">

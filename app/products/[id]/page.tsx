@@ -16,6 +16,7 @@ const ModelViewerAR = dynamic(() => import("@/components/model-viewer-ar"), { ss
 const TryOnComponent = dynamic(() => import("@/components/try-on-component"), { ssr: false })
 const ARVirtualTryon = dynamic(() => import("@/components/ar-virtual-tryon"), { ssr: false })
 const AdvancedVRTryon = dynamic(() => import("@/components/advanced-vr-tryon"), { ssr: false })
+const MobileARTryon = dynamic(() => import("@/components/mobile-ar-tryon"), { ssr: false })
 const TryOn3D = dynamic(() => import("@/components/tryon-3d"), { ssr: false })
 const ARTest = dynamic(() => import("@/components/ar-test"), { ssr: false })
 const ARDiagnostics = dynamic(() => import("@/components/ar-diagnostics"), { ssr: false })
@@ -27,13 +28,27 @@ export default function ProductDetailPage() {
   const addToCart = useCartStore((s) => s.add)
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const router = useRouter()
-  const [tryOnMode, setTryOnMode] = useState<'regular' | 'advanced'>('regular')
+  const [tryOnMode, setTryOnMode] = useState<'regular' | 'advanced' | 'mobile'>('regular')
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     if (!product) {
       // TODO: Replace with Supabase fetch by slug/id when backend connected
     }
   }, [product])
+
+  // Detect mobile device
+  useEffect(() => {
+    const userAgent = navigator.userAgent
+    const isIOSDevice = /iPad|iPhone|iPod/.test(userAgent)
+    const isAndroidDevice = /Android/i.test(userAgent)
+    setIsMobile(isIOSDevice || isAndroidDevice)
+    
+    // Set default mode based on device
+    if (isIOSDevice || isAndroidDevice) {
+      setTryOnMode('mobile')
+    }
+  }, [])
 
   if (!product) {
     return <div className="mx-auto max-w-4xl px-4 py-8">Product not found.</div>
@@ -121,55 +136,68 @@ export default function ProductDetailPage() {
               <Button
                 variant="outline"
                 onClick={async () => {
-                  // Find the model viewer element
-                  const modelViewer = document.querySelector('model-viewer') as any
-                  if (!modelViewer) {
-                    alert('3D model is loading. Please wait and try again.')
-                    return
-                  }
-
                   try {
-                    console.log('Attempting to activate AR...')
-                    console.log('Model viewer AR capable:', modelViewer.canActivateAR)
-                    
-                    // Check device compatibility
+                    // Check device compatibility first
                     const userAgent = navigator.userAgent
                     const isIOS = /iPad|iPhone|iPod/.test(userAgent)
                     const isAndroid = /android/i.test(userAgent)
-                    const isMobile = isIOS || isAndroid
+                    const isMobileDevice = isIOS || isAndroid
                     
-                    if (!isMobile) {
-                      alert('AR viewing is best on mobile devices (iPhone/iPad or Android). For desktop, you can still rotate and interact with the 3D model above.')
+                    if (!isMobileDevice) {
+                      alert('📱 AR viewing works best on mobile devices!\n\n• For iPhone/iPad: Use Safari browser\n• For Android: Use Chrome browser\n\nDesktop users can still interact with the 3D model above.')
                       return
                     }
+
+                    // Find the model viewer element
+                    const modelViewer = document.querySelector('model-viewer') as any
+                    if (!modelViewer) {
+                      alert('🔄 3D model is still loading. Please wait a moment and try again.')
+                      return
+                    }
+
+                    console.log('🚀 Attempting to activate mobile AR...')
                     
-                    // Ensure AR attributes are set
-                    modelViewer.setAttribute('ar', 'true')
-                    modelViewer.setAttribute('ar-modes', 'webxr scene-viewer quick-look')
-                    modelViewer.setAttribute('ar-placement', 'floor')
-                    modelViewer.setAttribute('ar-scale', 'auto')
-                    
-                    // Wait a moment for attributes to be processed
-                    await new Promise(resolve => setTimeout(resolve, 500))
-                    
-                    // Activate AR
-                    if (modelViewer.canActivateAR) {
-                      await modelViewer.activateAR()
-                      console.log('AR activated successfully')
-                    } else {
-                      throw new Error('AR not supported on this device')
+                    if (isAndroid) {
+                      // Android Scene Viewer approach
+                      const sceneViewerUrl = `intent://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(product.modelUrl)}&mode=ar_only&resizable=false#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(window.location.href)};end;`
+                      
+                      // Try model-viewer AR first
+                      if (modelViewer.canActivateAR) {
+                        await modelViewer.activateAR()
+                      } else {
+                        // Direct Scene Viewer fallback
+                        console.log('📱 Launching Android Scene Viewer...')
+                        window.location.href = sceneViewerUrl
+                      }
+                    } else if (isIOS) {
+                      // iOS Quick Look approach
+                      if (modelViewer.canActivateAR) {
+                        await modelViewer.activateAR()
+                      } else {
+                        // Direct Quick Look fallback
+                        const quickLookUrl = `${product.modelUrl}#allowsContentScaling=0`
+                        const a = document.createElement('a')
+                        a.href = quickLookUrl
+                        a.rel = 'ar'
+                        a.setAttribute('data-action', 'ar')
+                        document.body.appendChild(a)
+                        a.click()
+                        document.body.removeChild(a)
+                      }
                     }
                     
-                  } catch (error: any) {
-                    console.error('AR activation failed:', error)
+                    console.log('✅ AR activation attempt completed')
                     
-                    let message = 'AR viewing is not available. '
+                  } catch (error: any) {
+                    console.error('❌ AR activation failed:', error)
+                    
+                    let message = '🚫 AR viewing failed to start.\n\n'
                     if (error.message?.includes('not supported')) {
-                      message += 'This device may not support AR. Try using a newer mobile device with ARCore (Android) or ARKit (iOS) support.'
+                      message += '• Your device may not support AR\n• Try a newer device with ARCore (Android) or ARKit (iOS)'
                     } else if (error.message?.includes('permission')) {
-                      message += 'Camera permission is required. Please allow camera access and try again.'
+                      message += '• Camera permission required\n• Please allow camera access in browser settings'
                     } else {
-                      message += 'Please try:\n• Using a mobile device\n• Allowing camera access\n• Using Chrome (Android) or Safari (iOS)'
+                      message += '• Make sure you\'re using a mobile device\n• Allow camera access when prompted\n• Use Chrome (Android) or Safari (iOS)'
                     }
                     
                     alert(message)
@@ -177,7 +205,7 @@ export default function ProductDetailPage() {
                 }}
                 className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white font-semibold py-3"
               >
-                📱 View in AR
+                {isMobile ? '📱 View in AR' : '🖥️ View in AR (Mobile Only)'}
               </Button>
               <Button
                 variant="outline"
@@ -219,10 +247,20 @@ export default function ProductDetailPage() {
           
           {/* Mode Selection */}
           <div className="mb-6">
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
+              <button
+                onClick={() => setTryOnMode('mobile')}
+                className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                  tryOnMode === 'mobile'
+                    ? 'bg-green-600 text-white shadow-md shadow-green-500/20'
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                📱 Mobile AR
+              </button>
               <button
                 onClick={() => setTryOnMode('regular')}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                className={`px-4 py-3 rounded-lg font-medium transition-all ${
                   tryOnMode === 'regular'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
@@ -232,7 +270,7 @@ export default function ProductDetailPage() {
               </button>
               <button
                 onClick={() => setTryOnMode('advanced')}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                className={`px-4 py-3 rounded-lg font-medium transition-all ${
                   tryOnMode === 'advanced'
                     ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20'
                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
@@ -242,7 +280,9 @@ export default function ProductDetailPage() {
               </button>
             </div>
             <div className="text-sm text-slate-400">
-              {tryOnMode === 'regular' ? (
+              {tryOnMode === 'mobile' ? (
+                '• Optimized for mobile phones with front camera and touch controls'
+              ) : tryOnMode === 'regular' ? (
                 '• Quick and smooth AR experience with intelligent body tracking'
               ) : (
                 '• Advanced computer vision with body segmentation and precise measurements'
@@ -251,7 +291,12 @@ export default function ProductDetailPage() {
           </div>
           
           <ARErrorBoundary>
-            {tryOnMode === 'regular' ? (
+            {tryOnMode === 'mobile' ? (
+              <MobileARTryon 
+                modelUrl={product.modelUrl} 
+                className="w-full"
+              />
+            ) : tryOnMode === 'regular' ? (
               <ARVirtualTryon 
                 modelUrl={product.modelUrl} 
                 className="w-full"
@@ -266,7 +311,9 @@ export default function ProductDetailPage() {
           
           <div className="mt-4 text-center">
             <p className="text-slate-400 text-sm">
-              {tryOnMode === 'regular' ? (
+              {tryOnMode === 'mobile' ? (
+                `📱 Mobile-optimized AR with front camera and touch controls for ${product.title}`
+              ) : tryOnMode === 'regular' ? (
                 `💡 Move naturally to see how ${product.title} fits and looks on you`
               ) : (
                 '🔬 Advanced AI tracks your body precisely for the most realistic fitting experience'
