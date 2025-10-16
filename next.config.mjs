@@ -9,6 +9,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Enable network access for mobile development
+  // Note: Host and port are configured via package.json scripts
   // Add headers for AR assets and CORS
   async headers() {
     return [

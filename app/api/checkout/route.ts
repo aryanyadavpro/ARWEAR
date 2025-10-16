@@ -43,8 +43,8 @@ export async function POST(req: Request) {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/account?paid=1`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/cart`,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3002"}/account?paid=1`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3002"}/cart`,
       line_items: items.map((item) => ({
         price_data: {
           currency: "inr",

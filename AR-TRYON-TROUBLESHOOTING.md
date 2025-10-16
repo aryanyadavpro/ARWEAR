@@ -9,7 +9,7 @@ The AR try-on feature has been completely overhauled with dark theme compatibili
 ## 🧪 **HOW TO TEST THE TRY-ON FEATURE**
 
 ### **Step 1: Access a Product**
-1. Visit `http://localhost:3000`
+1. Visit `http://localhost:3002`
 2. Click on any product card
 3. You'll see the product page with:
    - 3D model viewer on the left
@@ -177,14 +177,14 @@ The tool provides specific recommendations based on your system:
 Modern browsers require secure contexts for camera access:
 
 - ✅ **HTTPS websites** (https://yoursite.com)
-- ✅ **Localhost development** (http://localhost:3000)
+- ✅ **Localhost development** (http://localhost:3002)
 - ❌ **HTTP websites** (http://yoursite.com) - blocked by browsers
 
 ### **Development Testing**
 ```bash
 # Local development (secure context)
 npm run dev
-# Visit: http://localhost:3000
+# Visit: http://localhost:3002
 
 # Production deployment
 # Must use HTTPS for camera features

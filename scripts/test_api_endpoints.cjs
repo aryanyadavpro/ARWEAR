@@ -40,7 +40,7 @@ async function testAPIEndpoints() {
   console.log('🧪 Testing Authentication API Endpoints...\n');
   
   const baseUrl = 'localhost';
-  const port = 3000;
+  const port = 3002;
   const testEmail = `api.test.${Date.now()}@example.com`;
   const testPassword = 'APITest123';
   
@@ -157,7 +157,7 @@ async function testAPIEndpoints() {
     
   } catch (error) {
     console.error('❌ API test failed:', error.message);
-    console.error('   Make sure the Next.js server is running on http://localhost:3000');
+    console.error('   Make sure the Next.js server is running on http://localhost:3002');
   }
 }
 

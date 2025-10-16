@@ -234,4 +234,4 @@ npm start
 
 **🎯 Your AR Fashion store is now a professional, modern, dark-themed experience that will engage users and encourage them to explore your AR try-on features!**
 
-**Visit: http://localhost:3000 to see the transformation!**
+**Visit: http://localhost:3002 to see the transformation!**
