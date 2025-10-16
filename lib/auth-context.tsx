@@ -8,6 +8,7 @@ interface AuthUser {
   email: string
   firstName: string
   lastName: string
+  avatar?: string | null
 }
 
 interface AuthContextType {

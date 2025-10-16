@@ -6,6 +6,7 @@ export interface AuthUser {
   email: string
   firstName: string
   lastName: string
+  avatar?: string | null
 }
 
 export async function verifyToken(token: string): Promise<AuthUser | null> {
@@ -22,8 +23,8 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
 
 export async function getAuthUser(request: NextRequest): Promise<AuthUser | null> {
   try {
-    // Try to get token from cookie
-    const token = request.cookies.get('token')?.value
+    // Try to get token from cookie (support both names)
+    const token = request.cookies.get('auth-token')?.value || request.cookies.get('token')?.value
     
     if (!token) {
       return null

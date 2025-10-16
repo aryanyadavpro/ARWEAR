@@ -163,7 +163,7 @@ export default function UserDashboard({ onClose }: UserDashboardProps = {}) {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-6">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={user.avatar} alt={user.firstName} />
+              <AvatarImage src={user.avatar ?? undefined} alt={user.firstName} />
               <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-lg">
                 {user.firstName?.[0]}{user.lastName?.[0]}
               </AvatarFallback>
