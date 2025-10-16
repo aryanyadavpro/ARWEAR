@@ -20,6 +20,7 @@ const nextConfig = {
           { key: 'Access-Control-Allow-Methods', value: 'GET, OPTIONS' },
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type' },
           { key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' },
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
           // Let Next set the correct Content-Type; we override only for .glb below
         ],
       },

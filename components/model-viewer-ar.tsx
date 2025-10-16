@@ -24,39 +24,25 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
   const [isModelViewerLoaded, setIsModelViewerLoaded] = useState(false)
   const [isClient, setIsClient] = useState(false)
   const [isAndroid, setIsAndroid] = useState(false)
+  const [isIOS, setIsIOS] = useState(false)
   
   useEffect(() => {
     setIsClient(true)
-    setIsAndroid(/Android/i.test(navigator.userAgent))
+    const ua = navigator.userAgent
+    setIsAndroid(/Android/i.test(ua))
+    setIsIOS(/iPad|iPhone|iPod/.test(ua))
     
     const loadModelViewer = async () => {
-      // Check if model-viewer is already loaded
-      if (window.customElements && window.customElements.get('model-viewer')) {
-        setIsModelViewerLoaded(true)
-        return
-      }
-      
-      const scriptId = "model-viewer-script-ar"
-      if (!document.getElementById(scriptId)) {
-        const script = document.createElement("script")
-        // Use a recent version matching package.json
-        script.src = "https://unpkg.com/@google/model-viewer@4.1.0/dist/model-viewer.min.js"
-        script.type = "module"
-        script.id = scriptId
-        script.crossOrigin = "anonymous"
-        
-        script.onload = () => {
-          console.log('Model Viewer script loaded for AR')
-          setTimeout(() => setIsModelViewerLoaded(true), 200)
+      // Load the web component from the installed package (no CDN)
+      if (!(window.customElements && window.customElements.get('model-viewer'))) {
+        try {
+          await import('@google/model-viewer/dist/model-viewer.min.js')
+        } catch (e) {
+          console.error('Failed to import @google/model-viewer', e)
+          return
         }
-        script.onerror = (e) => {
-          console.error('Failed to load Model Viewer script for AR:', e)
-        }
-        
-        document.head.appendChild(script)
-      } else {
-        setIsModelViewerLoaded(true)
       }
+      setIsModelViewerLoaded(true)
     }
     
     loadModelViewer()
@@ -249,14 +235,20 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
           backgroundColor: "#f8f9fa",
         }}
       >
-        {/* Custom AR Button */}
-        <button 
-          slot="ar-button"
-          onClick={activateAR}
-          className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg transition-colors font-medium"
-        >
-          📱 View in AR
-        </button>
+        {/* Custom AR Button (hide on iOS without USDZ) */}
+        {!isIOS ? (
+          <button 
+            slot="ar-button"
+            onClick={activateAR}
+            className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg transition-colors font-medium"
+          >
+            📱 View in AR
+          </button>
+        ) : (
+          <div slot="ar-button" className="absolute bottom-4 right-4 bg-slate-700 text-white/80 px-3 py-2 rounded-lg text-xs border border-slate-600">
+            iOS AR requires USDZ; 3D preview available
+          </div>
+        )}
         
         {/* Progress indicator */}
         <div slot="progress-bar" className="bg-blue-600 h-1"></div>

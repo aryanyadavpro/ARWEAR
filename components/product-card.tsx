@@ -22,35 +22,17 @@ export default function ProductCard({
 
   useEffect(() => {
     const loadModelViewer = async () => {
-      // Check if model-viewer is already loaded
-      if (window.customElements && window.customElements.get('model-viewer')) {
-        setSupported(true)
-        return
-      }
-      
-      const id = "model-viewer-script"
-      if (!document.getElementById(id)) {
-        const s = document.createElement("script")
-        s.src = "https://unpkg.com/@google/model-viewer@v3.3.0/dist/model-viewer.min.js"
-        s.type = "module"
-        s.id = id
-        s.crossOrigin = "anonymous"
-        
-        // Handle both load and error events
-        s.onload = () => {
-          console.log('Model Viewer script loaded successfully')
-          // Wait a bit for the custom element to register
-          setTimeout(() => setSupported(true), 100)
-        }
-        s.onerror = (e) => {
-          console.error('Failed to load Model Viewer script:', e)
+      // Load from local dependency to avoid CDN issues on prod
+      if (!(window.customElements && window.customElements.get('model-viewer'))) {
+        try {
+          await import('@google/model-viewer/dist/model-viewer.min.js')
+        } catch (e) {
+          console.error('Failed to import @google/model-viewer', e)
           setSupported(false)
+          return
         }
-        
-        document.head.appendChild(s)
-      } else {
-        setSupported(true)
       }
+      setSupported(true)
     }
     
     loadModelViewer()
@@ -63,7 +45,7 @@ export default function ProductCard({
           {supported ? (
             <model-viewer
               ref={viewerRef}
-              src={product.modelUrl}
+              src={new URL(product.modelUrl, typeof window === 'undefined' ? 'https://'+(process.env.NEXT_PUBLIC_SITE_URL||'example.com') : window.location.origin).href}
               alt={`${product.title} 3D model`}
               camera-controls
               touch-action="pan-y"
