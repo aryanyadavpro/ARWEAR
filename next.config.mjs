@@ -13,52 +13,42 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // Apply headers to all GLB files
-        source: '/assets/3d/:path*.glb',
+        // Apply headers to all assets in /public/assets/3d (CORS + CORP)
+        source: '/assets/3d/:path*',
         headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*',
-          },
-          {
-            key: 'Access-Control-Allow-Methods',
-            value: 'GET, OPTIONS',
-          },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type',
-          },
-          {
-            key: 'Cross-Origin-Resource-Policy',
-            value: 'cross-origin',
-          },
-          {
-            key: 'Content-Type',
-            value: 'model/gltf-binary',
-          },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type' },
+          { key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' },
+          // Let Next set the correct Content-Type; we override only for .glb below
         ],
       },
       {
-        // Apply headers to all files in public directory
-        source: '/(.*).(glb|gltf)',
+        // .glb files anywhere (explicit Content-Type for some CDNs/hosts)
+        source: '/:all*(.glb)',
         headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*',
-          },
-          {
-            key: 'Cross-Origin-Resource-Policy',
-            value: 'cross-origin',
-          },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' },
+          { key: 'Content-Type', value: 'model/gltf-binary' },
+        ],
+      },
+      {
+        // .gltf files anywhere (let's be explicit too)
+        source: '/:all*(.gltf)',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' },
+          { key: 'Content-Type', value: 'model/gltf+json' },
         ],
       },
       {
         // Security headers for AR features
-        source: '/(.*)',
+        source: '/:path*',
         headers: [
           {
             key: 'Permissions-Policy',
-            value: 'camera=*, microphone=*, geolocation=*, gyroscope=*, magnetometer=*, accelerometer=*',
+            value:
+              'camera=*, microphone=*, geolocation=(), gyroscope=*, magnetometer=*, accelerometer=*',
           },
         ],
       },

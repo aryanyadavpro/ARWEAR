@@ -39,7 +39,8 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
       const scriptId = "model-viewer-script-ar"
       if (!document.getElementById(scriptId)) {
         const script = document.createElement("script")
-        script.src = "https://unpkg.com/@google/model-viewer@v3.3.0/dist/model-viewer.min.js"
+        // Use a recent version matching package.json
+        script.src = "https://unpkg.com/@google/model-viewer@4.1.0/dist/model-viewer.min.js"
         script.type = "module"
         script.id = scriptId
         script.crossOrigin = "anonymous"
@@ -226,7 +227,6 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
         shadow-intensity="0.8"
         shadow-softness="0.3"
         environment-image="neutral"
-        ios-src={glbUrl}
         quick-look-browsers="safari chrome firefox"
         ar-hit-test="false"
         onError={(e: any) => {
