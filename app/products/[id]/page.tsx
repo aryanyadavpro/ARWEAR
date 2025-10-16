@@ -91,13 +91,13 @@ export default function ProductDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <div className="mx-auto max-w-6xl px-4 py-8">
-        <div className="mb-6">
-          <Button variant="outline" size="sm" className="border-slate-600 text-slate-200 hover:bg-slate-800" onClick={() => router.back()}>
+      <div className="mx-auto max-w-6xl px-4 py-4 lg:py-8">
+        <div className="mb-4 lg:mb-6">
+          <Button variant="outline" size="sm" className="border-slate-600 text-slate-200 hover:bg-slate-800 min-h-[44px] touch-manipulation" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4 mr-2" />Back
           </Button>
         </div>
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="flex flex-col lg:grid gap-6 lg:gap-8 lg:grid-cols-2">
         <div className="space-y-4">
           <ARErrorBoundary>
             <ModelViewerAR glbUrl={product.modelUrl} poster={product.previewImage} alt={`${product.title} 3D model`} />
@@ -107,18 +107,18 @@ export default function ProductDetailPage() {
           <ARTest />
         </div>
 
-        <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur p-6 rounded-xl border border-slate-700">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-4">{product.title}</h1>
+        <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur p-4 lg:p-6 rounded-xl border border-slate-700">
+          <h1 className="text-xl lg:text-2xl xl:text-3xl font-bold text-white mb-4">{product.title}</h1>
           
           <div className="mt-4 p-4 bg-slate-800/50 backdrop-blur rounded-lg border border-slate-700">
             <h3 className="text-sm font-semibold text-blue-400 uppercase tracking-wide mb-2">Product Details</h3>
             <p className="text-slate-300 leading-relaxed whitespace-pre-wrap">{product.description}</p>
           </div>
           
-          <div className="mt-6 flex items-center gap-6">
+          <div className="mt-4 lg:mt-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
             <div>
-              <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">{formatInrFromUsdCents(product.priceCents)}</span>
-              <span className="text-sm text-slate-400 ml-2">Free shipping</span>
+              <span className="text-xl lg:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">{formatInrFromUsdCents(product.priceCents)}</span>
+              <span className="text-sm text-slate-400 ml-2 block sm:inline">Free shipping</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
@@ -126,14 +126,14 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          <div className="mt-6">
+          <div className="mt-4 lg:mt-6">
             <p className="text-sm font-semibold text-slate-200 mb-3">Select Size</p>
-            <div role="listbox" aria-label="Sizes" className="flex flex-wrap gap-2">
+            <div role="listbox" aria-label="Sizes" className="flex flex-wrap gap-3">
               {product.sizes.map((s) => (
                 <button
                   key={s}
                   onClick={() => setSelectedSize(s)}
-                  className={`px-4 py-2 rounded-full border-2 font-medium transition-all ${
+                  className={`px-4 py-3 rounded-full border-2 font-medium transition-all touch-manipulation min-h-[44px] min-w-[44px] ${
                     selectedSize === s
                       ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white border-blue-600 shadow-md shadow-blue-500/20"
                       : "bg-slate-700 text-slate-300 border-slate-600 hover:border-blue-500 hover:bg-slate-600"
@@ -146,18 +146,20 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          <div className="mt-8 space-y-4">
+          <div className="mt-6 lg:mt-8 space-y-4">
             <Button
               onClick={handleAddToCart}
               disabled={!selectedSize || isAddingToCart}
               aria-disabled={!selectedSize || isAddingToCart}
               data-add-to-cart-btn
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 text-lg shadow-lg disabled:opacity-50"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-4 text-base lg:text-lg shadow-lg disabled:opacity-50 min-h-[52px] touch-manipulation"
             >
-              {isAddingToCart ? "Adding..." : !selectedSize ? "Select size to add to cart" : `Add to cart - ${formatInrFromUsdCents(product.priceCents)}`}
+              <span className="text-center">
+                {isAddingToCart ? "Adding..." : !selectedSize ? "Select size to add to cart" : `Add to cart - ${formatInrFromUsdCents(product.priceCents)}`}
+              </span>
             </Button>
             
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 variant="outline"
                 onClick={async () => {
@@ -241,7 +243,7 @@ export default function ProductDetailPage() {
                     modal.showModal()
                   }
                 }}
-                className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white font-semibold py-3"
+                className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white font-semibold py-4 min-h-[52px] touch-manipulation"
               >
                 👤 Virtual Try On
               </Button>

@@ -51,7 +51,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#1e293b" },
     { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
@@ -65,7 +67,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} bg-slate-900 text-slate-100 antialiased`}>
+      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased touch-manipulation`}>
         <AuthProvider>
           <Suspense fallback={
             <div className="flex items-center justify-center min-h-screen bg-slate-900">

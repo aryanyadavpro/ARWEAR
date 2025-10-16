@@ -54,14 +54,12 @@ export default function HomePage() {
                 <ArrowRight className="h-5 w-5" />
               </Link>
             </Button>
-            <Button 
+            <button 
               onClick={() => smoothScrollToSection('features')} 
-              variant="outline" 
-              size="lg" 
-              className="border-gray-300 text-gray-700 hover:bg-gray-50 text-lg px-8 py-3 hover:scale-105 transition-all duration-200"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-lg font-medium transition-all disabled:pointer-events-none disabled:opacity-50 border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-10 px-6 border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-3 hover:scale-105 duration-200"
             >
               Learn More
-            </Button>
+            </button>
           </div>
           
           {/* Stats */}

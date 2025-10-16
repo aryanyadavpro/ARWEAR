@@ -542,3 +542,21 @@ export default new UniversalDatabaseService()
 
 // Export individual services for specific use cases
 export { databaseService, fallbackService }
+
+// Mongoose-compatible connectDB function
+export async function connectDB() {
+  const mongoose = require('mongoose')
+  
+  if (mongoose.connections[0].readyState) {
+    return
+  }
+  
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      bufferCommands: false,
+    })
+  } catch (error) {
+    console.error('MongoDB connection failed:', error)
+    throw error
+  }
+}
