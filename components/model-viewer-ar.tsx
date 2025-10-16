@@ -206,7 +206,7 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
     <div className="w-full">
       <model-viewer
         ref={viewerRef}
-        src={glbUrl || 'https://modelviewer.dev/shared-assets/models/Astronaut.glb'}
+        src={glbUrl && glbUrl.trim() !== '' ? glbUrl : 'https://modelviewer.dev/shared-assets/models/Astronaut.glb'}
         poster={poster}
         alt={alt}
         ar

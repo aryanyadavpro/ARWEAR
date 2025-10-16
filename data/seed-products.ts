@@ -24,7 +24,7 @@ export const seedProducts: SeedProduct[] = [
     priceCents: 2500,
     stock: 12,
     previewImage: "/images/product-1.jpg",
-    modelUrl: "/assets/3d/t-shirt (1).glb",
+    modelUrl: "/assets/3d/t-shirt-1.glb",
   },
   {
     id: "relaxed-tee",

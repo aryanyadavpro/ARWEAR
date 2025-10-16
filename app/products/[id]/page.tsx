@@ -100,7 +100,7 @@ export default function ProductDetailPage() {
         <div className="flex flex-col lg:grid gap-6 lg:gap-8 lg:grid-cols-2">
         <div className="space-y-4">
           <ARErrorBoundary>
-            <ModelViewerAR glbUrl={product.modelUrl} poster={product.previewImage} alt={`${product.title} 3D model`} />
+            <ModelViewerAR glbUrl={new URL(product.modelUrl, typeof window === 'undefined' ? 'https://'+(process.env.NEXT_PUBLIC_SITE_URL||'example.com') : window.location.origin).href} poster={product.previewImage} alt={`${product.title} 3D model`} />
           </ARErrorBoundary>
           
           {/* AR Compatibility Check */}
