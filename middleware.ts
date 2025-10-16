@@ -4,6 +4,11 @@ import type { NextRequest } from "next/server"
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
 
+  // Bypass auth middleware for local mobile testing when enabled
+  if (process.env.NEXT_PUBLIC_DISABLE_AUTH === '1') {
+    return NextResponse.next()
+  }
+
   // Skip middleware for static assets and API routes
   if (
     pathname.startsWith('/_next/') ||
