@@ -4,17 +4,29 @@ import { loadStripe } from "@stripe/stripe-js"
 import { useCartStore } from "@/store/cart-store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useState } from "react"
-import { AlertCircle, CreditCard, ShoppingBag } from "lucide-react"
+import { useEffect, useState } from "react"
+import { AlertCircle, CreditCard, ShoppingBag, MapPin } from "lucide-react"
 
 export default function CheckoutPage() {
   const { items, clear, getTotalPrice } = useCartStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [address, setAddress] = useState<any | null>(null)
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("shippingAddress")
+      if (saved) setAddress(JSON.parse(saved))
+    } catch {}
+  }, [])
 
   async function handleCheckout() {
     if (items.length === 0) {
       setError("Your cart is empty. Please add items before checkout.")
+      return
+    }
+    if (!address) {
+      setError("Please add your Home Location in the Dashboard before proceeding.")
       return
     }
 
@@ -35,24 +47,11 @@ export default function CheckoutPage() {
       
       const data = await res.json()
       
-      if (data.sessionId) {
-        const stripePublicKey = process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY
-        if (!stripePublicKey) {
-          throw new Error("Stripe public key is not configured. Please check your environment variables.")
-        }
-        
-        const stripe = await loadStripe(stripePublicKey)
-        if (!stripe) {
-          throw new Error("Failed to load Stripe. Please check your internet connection and try again.")
-        }
-        
-        // Use redirectToCheckout with proper typing
-        const { error } = await (stripe as any).redirectToCheckout({ sessionId: data.sessionId })
-        if (error) {
-          throw new Error(error.message || "An error occurred while redirecting to checkout.")
-        }
+      if (data.url) {
+        // Redirect to Stripe Checkout using session URL
+        window.location.href = data.url
       } else {
-        throw new Error("No session ID returned from server. Please try again.")
+        throw new Error("No checkout URL returned from server. Please try again.")
       }
     } catch (err: any) {
       console.error("Checkout error:", err)
@@ -106,6 +105,28 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Shipping Address */}
+          <Card className="border-gray-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-gray-900">
+                <MapPin className="h-5 w-5" />
+                Shipping Address
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {address ? (
+                <div className="text-sm text-gray-800">
+                  <div>{address.street}</div>
+                  <div>{address.city}, {address.state} {address.pincode}</div>
+                  <div>{address.country}</div>
+                  <p className="text-xs text-gray-500 mt-2">Edit this from the Dashboard button on the left.</p>
+                </div>
+              ) : (
+                <div className="text-sm text-gray-500">No address set. Open the Dashboard (left button) to add your Home Location.</div>
               )}
             </CardContent>
           </Card>

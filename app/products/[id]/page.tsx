@@ -93,7 +93,7 @@ export default function ProductDetailPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <div className="mx-auto max-w-6xl px-4 py-4 lg:py-8">
         <div className="mb-4 lg:mb-6">
-          <Button variant="outline" size="sm" className="border-slate-600 text-slate-200 hover:bg-slate-800 min-h-[44px] touch-manipulation" onClick={() => router.back()}>
+          <Button size="sm" className="bg-violet-600 hover:bg-violet-700 text-white min-h-[44px] touch-manipulation" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4 mr-2" />Back
           </Button>
         </div>
@@ -230,7 +230,7 @@ export default function ProductDetailPage() {
                     alert(message)
                   }
                 }}
-                className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white font-semibold py-3"
+                className="flex-1 h-12 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white font-semibold px-4 whitespace-nowrap justify-center"
               >
                 {isMobile ? '📱 View in AR' : '🖥️ View in AR (Mobile Only)'}
               </Button>
@@ -243,7 +243,7 @@ export default function ProductDetailPage() {
                     modal.showModal()
                   }
                 }}
-                className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white font-semibold py-4 min-h-[52px] touch-manipulation"
+                className="flex-1 h-12 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white font-semibold px-4 whitespace-nowrap touch-manipulation justify-center"
               >
                 👤 Virtual Try On
               </Button>
