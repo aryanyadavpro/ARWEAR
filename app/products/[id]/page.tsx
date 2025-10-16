@@ -185,8 +185,9 @@ export default function ProductDetailPage() {
                     console.log('🚀 Attempting to activate mobile AR...')
                     
                     if (isAndroid) {
-                      // Android Scene Viewer approach
-                      const sceneViewerUrl = `intent://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(product.modelUrl)}&mode=ar_only&resizable=false#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(window.location.href)};end;`
+                      // Android Scene Viewer approach (absolute HTTPS required)
+                      const absoluteGlbUrl = new URL(product.modelUrl, window.location.origin).href
+                      const sceneViewerUrl = `intent://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(absoluteGlbUrl)}&mode=ar_only&resizable=false#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(window.location.href)};end;`
                       
                       // Try model-viewer AR first
                       if (modelViewer.canActivateAR) {

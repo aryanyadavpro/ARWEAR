@@ -99,11 +99,12 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
 
       // Check mobile platform and prefer appropriate AR mode
       if (isAndroid) {
-        // Android: Try Scene Viewer first
-        const sceneViewerUrl = `intent://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(glbUrl)}&mode=ar_only&resizable=false#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(window.location.href)};end;`
+        // Android: Try Scene Viewer first with ABSOLUTE HTTPS URL (required)
+        const absoluteGlbUrl = new URL(glbUrl, window.location.origin).href
+        const sceneViewerUrl = `intent://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(absoluteGlbUrl)}&mode=ar_only&resizable=false#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(window.location.href)};end;`
         
         try {
-          // Try model-viewer AR activation first
+          // Try model-viewer AR activation first (auto-resolves to Scene Viewer)
           if (viewerRef.current.canActivateAR) {
             await viewerRef.current.activateAR()
             return
