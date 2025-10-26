@@ -13,6 +13,8 @@ interface AdvancedCameraTryonProps {
 }
 
 export default function AdvancedCameraTryon({ modelUrl, className = "" }: AdvancedCameraTryonProps) {
+  console.log('[AdvancedCameraTryon] Component mounted with modelUrl:', modelUrl)
+  
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -352,14 +354,18 @@ export default function AdvancedCameraTryon({ modelUrl, className = "" }: Advanc
 
   // Start camera
   const startCamera = async () => {
+    console.log('[AdvancedCameraTryon] startCamera called')
+    alert('[DEBUG] Start Camera button clicked! Check console for detailed logs.')
     try {
       setLoading(true)
       setError(null)
 
+      console.log('[AdvancedCameraTryon] Checking camera API support...')
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error("Camera API not supported in this browser")
       }
 
+      console.log('[AdvancedCameraTryon] Requesting camera permission...')
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: "user",
@@ -368,28 +374,34 @@ export default function AdvancedCameraTryon({ modelUrl, className = "" }: Advanc
         },
         audio: false
       })
+      console.log('[AdvancedCameraTryon] Camera stream obtained:', stream)
 
       if (videoRef.current) {
+        console.log('[AdvancedCameraTryon] Setting video source...')
         videoRef.current.srcObject = stream
         streamRef.current = stream
         
         await new Promise<void>((resolve) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = () => {
+              console.log('[AdvancedCameraTryon] Video metadata loaded')
               videoRef.current?.play().then(() => {
+                console.log('[AdvancedCameraTryon] Video playing')
                 resolve()
               }).catch(err => {
-                console.error("Video play error:", err)
+                console.error("[AdvancedCameraTryon] Video play error:", err)
                 resolve()
               })
             }
           }
         })
         
+        console.log('[AdvancedCameraTryon] Setting camera active')
         setCameraActive(true)
       }
 
       setLoading(false)
+      console.log('[AdvancedCameraTryon] Camera started successfully')
     } catch (err: any) {
       console.error("Camera error:", err)
       let errorMessage = "Failed to access camera. "
