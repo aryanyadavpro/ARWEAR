@@ -13,11 +13,7 @@ import { ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 const ModelViewerAR = dynamic(() => import("@/components/model-viewer-ar"), { ssr: false })
-const TryOnComponent = dynamic(() => import("@/components/try-on-component"), { ssr: false })
-const ARVirtualTryon = dynamic(() => import("@/components/ar-virtual-tryon"), { ssr: false })
-const AdvancedVRTryon = dynamic(() => import("@/components/advanced-vr-tryon"), { ssr: false })
-const MobileARTryon = dynamic(() => import("@/components/mobile-ar-tryon"), { ssr: false })
-const TryOn3D = dynamic(() => import("@/components/tryon-3d"), { ssr: false })
+const LazyARTryOn = dynamic(() => import("@/components/lazy-ar-tryon"), { ssr: false })
 const ARTest = dynamic(() => import("@/components/ar-test"), { ssr: false })
 const ARDiagnostics = dynamic(() => import("@/components/ar-diagnostics"), { ssr: false })
 const AuthDebug = dynamic(() => import("@/components/auth-debug"), { ssr: false })
@@ -317,24 +313,11 @@ export default function ProductDetailPage() {
               )}
             </div>
           </div>
-          
           <ARErrorBoundary>
-            {tryOnMode === 'mobile' ? (
-              <MobileARTryon 
-                modelUrl={product.modelUrl} 
-                className="w-full"
-              />
-            ) : tryOnMode === 'regular' ? (
-              <ARVirtualTryon 
-                modelUrl={product.modelUrl} 
-                className="w-full"
-              />
-            ) : (
-              <AdvancedVRTryon 
-                modelUrl={product.modelUrl} 
-                className="w-full"
-              />
-            )}
+            <LazyARTryOn 
+              modelUrl={product.modelUrl}
+              tryOnMode={tryOnMode}
+            />
           </ARErrorBoundary>
           
           <div className="mt-4 text-center">

@@ -1,7 +1,18 @@
+"use client"
+
+import AdminUploader from '@/components/admin-uploader'
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
+
 export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <div className="mx-auto max-w-4xl px-4 py-20">
+      <div className="mx-auto max-w-6xl px-4 py-12">
+        {/* Back button */}
+        <Link href="/" className="inline-flex items-center gap-2 text-slate-300 hover:text-white mb-6 transition-colors">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Home
+        </Link>
         <div className="text-center">
           <div className="mb-8">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -48,17 +59,11 @@ export default function AdminPage() {
             </div>
           </div>
           
-          <div className="mt-12 p-6 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-              <span className="text-yellow-400 font-semibold">Admin Access Required</span>
-            </div>
-            <p className="text-yellow-300 text-sm">
-              This is a demo admin page. In a production environment, proper authentication and authorization would be required to access admin functionality.
-            </p>
-          </div>
+        </div>
+        
+        {/* 3D Model Upload Section */}
+        <div className="mt-12">
+          <AdminUploader />
         </div>
       </div>
     </div>

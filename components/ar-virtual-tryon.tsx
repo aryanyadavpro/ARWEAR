@@ -172,21 +172,30 @@ export default function ARVirtualTryon({ modelUrl, onReadyChange, className = ""
     const worldY = ndcY
     
     // Adjust position based on clothing type
-    let positionOffsetY = 0
+    let positionOffsetY = 0.1 // Slight offset to center on chest
     switch (clothingType) {
       case 'pants':
-        positionOffsetY = -0.15 // Position lower for pants
+        positionOffsetY = -0.3 // Position lower for pants
         break
       case 'jacket':
-        positionOffsetY = 0.05 // Position slightly higher for jackets
+        positionOffsetY = 0.15 // Position slightly higher for jackets
         break
       case 'dress':
-        positionOffsetY = -0.05 // Center for dresses
+        positionOffsetY = 0 // Center for dresses
+        break
+      case 'shirt':
+        positionOffsetY = 0.1 // Slightly up for shirts
         break
     }
 
+    // Fixed position - attach to body
     model.position.set(worldX, worldY + positionOffsetY, 0)
-    model.rotation.set(0, 0, measurements.angle)
+    
+    // NO ROTATION - Keep model upright and aligned with body
+    model.rotation.set(0, 0, 0)
+    
+    // Make model visible
+    model.visible = true
 
     // Calculate scale based on body measurements and clothing type
     let scaleX = (measurements.shoulderWidth / videoWidth) * 3.2

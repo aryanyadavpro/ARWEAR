@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -56,10 +53,6 @@ const nextConfig = {
         ],
       },
     ]
-  },
-  // Experimental features for better AR support
-  experimental: {
-    esmExternals: 'loose',
   },
 }
 
