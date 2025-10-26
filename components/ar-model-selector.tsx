@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button'
 import { Loader2, AlertCircle } from 'lucide-react'
 import ModelViewerAR from './model-viewer-ar'
-import ARVirtualTryon from './ar-virtual-tryon'
+import SimpleARTryOn from './simple-ar-tryon'
 
 interface ARModelSelectorProps {
   category?: string
@@ -143,7 +143,7 @@ export default function ARModelSelector({ category, mode = 'viewer', className =
         </div>
       ) : modelURL ? (
         mode === 'tryon' ? (
-          <ARVirtualTryon modelUrl={modelURL} className="w-full" />
+          <SimpleARTryOn modelUrl={modelURL} className="w-full" />
         ) : (
           <ModelViewerAR
             glbUrl={modelURL}
