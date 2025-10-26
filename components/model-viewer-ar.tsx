@@ -26,6 +26,13 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
   const [isAndroid, setIsAndroid] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
   
+  // Interactive controls state
+  const [scale, setScale] = useState(1.0)
+  const [rotationY, setRotationY] = useState(0)
+  const [cameraOrbitTheta, setCameraOrbitTheta] = useState(0)
+  const [cameraOrbitPhi, setCameraOrbitPhi] = useState(75)
+  const [cameraDistance, setCameraDistance] = useState(105)
+  
   useEffect(() => {
     setIsClient(true)
     const ua = navigator.userAgent
@@ -48,22 +55,32 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
     loadModelViewer()
   }, [])
 
-  const handleScale = (factor: "increase" | "decrease") => {
+  // Update model scale
+  const updateScale = (newScale: number) => {
     if (!viewerRef.current) return
-    const currentScale = parseFloat(viewerRef.current.scale.split(" ")[0])
-    const nextScale =
-      factor === "increase"
-        ? Math.min(0.6, currentScale + 0.05)
-        : Math.max(0.05, currentScale - 0.05)
-    viewerRef.current.scale = `${nextScale} ${nextScale} ${nextScale}`
+    setScale(newScale)
+    viewerRef.current.scale = `${newScale} ${newScale} ${newScale}`
   }
 
-  const handleRotate = () => {
+  // Update camera orbit (rotation around model)
+  const updateCameraOrbit = (theta: number, phi: number, distance: number) => {
     if (!viewerRef.current) return
-    const currentOrbit = viewerRef.current.cameraOrbit
-    const [theta, phi, radius] = currentOrbit.split(" ")
-    const nextTheta = parseFloat(theta) + 15
-    viewerRef.current.cameraOrbit = `${nextTheta}deg ${phi} ${radius}`
+    setCameraOrbitTheta(theta)
+    setCameraOrbitPhi(phi)
+    setCameraDistance(distance)
+    viewerRef.current.cameraOrbit = `${theta}deg ${phi}deg ${distance}%`
+  }
+  
+  // Reset to default view
+  const resetView = () => {
+    setScale(1.0)
+    setCameraOrbitTheta(0)
+    setCameraOrbitPhi(75)
+    setCameraDistance(105)
+    if (viewerRef.current) {
+      viewerRef.current.scale = "1 1 1"
+      viewerRef.current.cameraOrbit = "0deg 75deg 105%"
+    }
   }
 
   const activateAR = async () => {
@@ -254,55 +271,145 @@ export default function ModelViewerAR({ glbUrl, poster, alt }: Props) {
         <div slot="progress-bar" className="bg-blue-600 h-1"></div>
       </model-viewer>
 
-      {/* Controls */}
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2">
+      {/* Advanced Interactive Controls */}
+      <div className="mt-4 bg-slate-800/50 border border-slate-700 rounded-lg p-4 space-y-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold text-slate-200">3D Model Controls</h3>
           <Button
             variant="outline"
             size="sm"
-            className="border-slate-600 bg-slate-900 text-slate-200 hover:bg-slate-800"
-            onClick={() => handleScale("decrease")}
-            aria-label="Decrease scale"
+            onClick={resetView}
+            className="border-slate-600 bg-slate-900 text-slate-200 hover:bg-slate-800 text-xs"
           >
-            −
-          </Button>
-          <span className="text-sm font-medium text-slate-300">Scale</span>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-slate-600 bg-slate-900 text-slate-200 hover:bg-slate-800"
-            onClick={() => handleScale("increase")}
-            aria-label="Increase scale"
-          >
-            +
+            Reset View
           </Button>
         </div>
+        
+        {/* Scale Control */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-slate-300">Scale</label>
+            <span className="text-xs text-slate-400">{scale.toFixed(2)}x</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-slate-600 bg-slate-900 text-slate-200 hover:bg-slate-800 h-8 w-8 p-0"
+              onClick={() => updateScale(Math.max(0.1, scale - 0.1))}
+            >
+              −
+            </Button>
+            <input
+              type="range"
+              min="0.1"
+              max="3"
+              step="0.1"
+              value={scale}
+              onChange={(e) => updateScale(parseFloat(e.target.value))}
+              className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-slate-600 bg-slate-900 text-slate-200 hover:bg-slate-800 h-8 w-8 p-0"
+              onClick={() => updateScale(Math.min(3, scale + 0.1))}
+            >
+              +
+            </Button>
+          </div>
+        </div>
 
-        <div className="ml-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-slate-600 bg-slate-900 text-slate-200 hover:bg-slate-800"
-            onClick={handleRotate}
-            aria-label="Rotate 15 degrees"
-          >
-            Rotate
-          </Button>
+        {/* Horizontal Rotation */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-slate-300">Horizontal Rotation</label>
+            <span className="text-xs text-slate-400">{cameraOrbitTheta}°</span>
+          </div>
+          <input
+            type="range"
+            min="-180"
+            max="180"
+            step="5"
+            value={cameraOrbitTheta}
+            onChange={(e) => updateCameraOrbit(parseInt(e.target.value), cameraOrbitPhi, cameraDistance)}
+            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider"
+          />
+        </div>
+
+        {/* Vertical Rotation */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-slate-300">Vertical Angle</label>
+            <span className="text-xs text-slate-400">{cameraOrbitPhi}°</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="180"
+            step="5"
+            value={cameraOrbitPhi}
+            onChange={(e) => updateCameraOrbit(cameraOrbitTheta, parseInt(e.target.value), cameraDistance)}
+            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider"
+          />
+        </div>
+
+        {/* Distance/Zoom */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-slate-300">Distance</label>
+            <span className="text-xs text-slate-400">{cameraDistance}%</span>
+          </div>
+          <input
+            type="range"
+            min="50"
+            max="200"
+            step="5"
+            value={cameraDistance}
+            onChange={(e) => updateCameraOrbit(cameraOrbitTheta, cameraOrbitPhi, parseInt(e.target.value))}
+            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider"
+          />
         </div>
       </div>
 
       {/* AR Instructions */}
       <div className="mt-3 p-3 bg-slate-800/60 border border-slate-700 rounded-md">
         <h4 className="text-sm font-medium text-slate-100 mb-1">
-          AR Viewing Instructions:
+          💡 Quick Tips:
         </h4>
-        <ul className="text-xs text-slate-300 list-disc list-inside space-y-1">
-          <li>Use the Scale and Rotate controls to adjust the model</li>
-          <li>Ensure good lighting and keep your upper body in frame</li>
-          <li>On mobile, use a stable posture for smoother tracking</li>
-          <li>For AR-in-space, try the built-in AR button on supported devices</li>
+        <ul className="text-xs text-slate-300 space-y-1">
+          <li>• Drag on the model to rotate it freely</li>
+          <li>• Use sliders above for precise control</li>
+          <li>• Pinch to zoom or use the distance slider</li>
+          <li>• Click "View in AR" button on mobile for immersive AR</li>
         </ul>
       </div>
+
+      <style jsx global>{`
+        .slider::-webkit-slider-thumb {
+          appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #8b5cf6;
+          cursor: pointer;
+          border: 2px solid #f8f9fa;
+        }
+        .slider::-moz-range-thumb {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #8b5cf6;
+          cursor: pointer;
+          border: 2px solid #f8f9fa;
+        }
+        .slider::-webkit-slider-thumb:hover {
+          background: #7c3aed;
+        }
+        .slider::-moz-range-thumb:hover {
+          background: #7c3aed;
+        }
+      `}</style>
     </div>
   )
 }
