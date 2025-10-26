@@ -20,19 +20,58 @@ const AuthDebug = dynamic(() => import("@/components/auth-debug"), { ssr: false 
 
 export default function ProductDetailPage() {
   const params = useParams<{ id: string }>()
-  const product = useMemo(() => seedProducts.find((p) => p.id === params.id), [params.id])
   const addToCart = useCartStore((s) => s.add)
+  const [product, setProduct] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const router = useRouter()
   const [tryOnMode, setTryOnMode] = useState<'regular' | 'advanced' | 'mobile'>('regular')
   const [isMobile, setIsMobile] = useState(false)
 
+  // Fetch product from database with fallback to seed data
   useEffect(() => {
-    if (!product) {
-      // TODO: Replace with Supabase fetch by slug/id when backend connected
+    const fetchProduct = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/products/${params.id}`)
+        
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.data) {
+            // Convert database product to expected format
+            const dbProduct = result.data
+            setProduct({
+              id: dbProduct.id || dbProduct._id,
+              title: dbProduct.name || dbProduct.title,
+              description: dbProduct.description || '',
+              priceCents: dbProduct.price ? Math.round(dbProduct.price * 100) : dbProduct.priceCents || 0,
+              previewImage: dbProduct.image || dbProduct.previewImage || '',
+              modelUrl: dbProduct.modelUrl || '',
+              sizes: dbProduct.sizes || ['S', 'M', 'L', 'XL'],
+              stock: dbProduct.stock || 10,
+              category: dbProduct.category || 'clothing'
+            })
+          } else {
+            throw new Error('Product not found in database')
+          }
+        } else {
+          throw new Error('Failed to fetch from database')
+        }
+      } catch (error) {
+        console.warn('Falling back to seed data:', error)
+        // Fallback to seed data
+        const seedProduct = seedProducts.find((p) => p.id === params.id)
+        if (seedProduct) {
+          setProduct(seedProduct)
+        }
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [product])
+    
+    fetchProduct()
+  }, [params.id])
 
   // Detect mobile device
   useEffect(() => {
@@ -81,8 +120,28 @@ export default function ProductDetailPage() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-violet-500 mx-auto mb-4" />
+          <p className="text-slate-300">Loading product...</p>
+        </div>
+      </div>
+    )
+  }
+
   if (!product) {
-    return <div className="mx-auto max-w-4xl px-4 py-8">Product not found.</div>
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-400 text-xl mb-4">Product not found</p>
+          <Button onClick={() => router.push('/products')} className="bg-violet-600 hover:bg-violet-700">
+            Back to Products
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
