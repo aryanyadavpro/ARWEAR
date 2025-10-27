@@ -14,8 +14,14 @@ export default function Header() {
   const count = useCartStore((s) => s.getItemCount())
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [dashboardOpen, setDashboardOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const { user, logout, loading } = useAuth()
   const router = useRouter()
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Shipping address state for quick checkout
   const [isEditingAddress, setIsEditingAddress] = useState(false)
@@ -72,7 +78,7 @@ export default function Header() {
     <header className="border-b border-slate-700 bg-slate-900 sticky top-0 z-50 shadow-sm">
       <div className="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between touch-manipulation">
         <div className="flex items-center gap-2">
-          {user && (
+          {mounted && user && (
             <button
               onClick={() => setDashboardOpen(true)}
               aria-label="Open Dashboard"
@@ -105,7 +111,7 @@ export default function Header() {
             >
               Features
             </button>
-            {user && (
+            {mounted && user && (
               <button 
                 onClick={() => handleNavClick('/dashboard')} 
                 className="text-slate-300 hover:text-white transition-colors font-medium cursor-pointer px-3 py-2 rounded-md hover:bg-slate-800 min-h-[44px] touch-manipulation"
@@ -117,7 +123,9 @@ export default function Header() {
           
           <div className="flex items-center gap-3 ml-4">
             {/* Auth Buttons - only show when not logged in */}
-            {loading ? (
+            {!mounted ? (
+              <div className="w-6 h-6 animate-spin rounded-full border-2 border-violet-400 border-t-transparent" />
+            ) : loading ? (
               <div className="w-6 h-6 animate-spin rounded-full border-2 border-violet-400 border-t-transparent" />
             ) : !user ? (
               <>
@@ -131,7 +139,7 @@ export default function Header() {
             ) : null}
             
             {/* Cart Button - only show when user is logged in */}
-            {user && (
+            {mounted && user && (
               <Button asChild size="sm" className="bg-violet-600 hover:bg-violet-700 text-white min-h-[44px] min-w-[44px] touch-manipulation">
                 <Link href="/cart" aria-label="Cart" className="flex items-center gap-2 px-3 py-2">
                   <ShoppingCart className="h-5 w-5" />
@@ -144,7 +152,7 @@ export default function Header() {
             )}
             
             {/* Logout Button - positioned after cart */}
-            {user && (
+            {mounted && user && (
               <Button 
                 onClick={logout} 
                 variant="ghost" 
@@ -161,7 +169,7 @@ export default function Header() {
         {/* Mobile menu button */}
         <div className="md:hidden flex items-center gap-2">
           {/* Mobile Cart - only show when user is logged in */}
-          {user && (
+          {mounted && user && (
             <Button asChild size="sm" className="bg-violet-600 hover:bg-violet-700 text-white min-h-[44px] min-w-[44px] touch-manipulation">
               <Link href="/cart" aria-label="Cart" className="flex items-center justify-center gap-1 p-2">
                 <ShoppingCart className="h-5 w-5" />
@@ -200,7 +208,11 @@ export default function Header() {
               Features
             </button>
             <div className="flex flex-col gap-2 pt-2 border-t border-slate-700">
-              {loading ? (
+              {!mounted ? (
+                <div className="flex justify-center py-2">
+                  <div className="w-6 h-6 animate-spin rounded-full border-2 border-violet-400 border-t-transparent" />
+                </div>
+              ) : loading ? (
                 <div className="flex justify-center py-2">
                   <div className="w-6 h-6 animate-spin rounded-full border-2 border-violet-400 border-t-transparent" />
                 </div>
@@ -274,7 +286,7 @@ export default function Header() {
             
             {/* Dashboard Content */}
             <div className="p-6 h-full overflow-y-auto">
-              {user && (
+              {mounted && user && (
                 <>
                   {/* Profile Section */}
                   <div className="mb-8 pt-8">

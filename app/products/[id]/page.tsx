@@ -63,6 +63,8 @@ export default function ProductDetailPage() {
         // Fallback to seed data
         const seedProduct = seedProducts.find((p) => p.id === params.id)
         if (seedProduct) {
+          console.log('📦 Seed product loaded:', seedProduct.title)
+          console.log('🎨 Model URL:', seedProduct.modelUrl)
           setProduct(seedProduct)
         }
       } finally {
@@ -373,10 +375,20 @@ export default function ProductDetailPage() {
             </div>
           </div>
           <ARErrorBoundary>
-            <LazyARTryOn 
-              modelUrl={product.modelUrl}
-              tryOnMode={tryOnMode}
-            />
+            {product.modelUrl ? (
+              <>
+                {console.log('🚀 Passing modelUrl to LazyARTryOn:', product.modelUrl)}
+                <LazyARTryOn 
+                  modelUrl={product.modelUrl}
+                  tryOnMode={tryOnMode}
+                />
+              </>
+            ) : (
+              <div className="bg-red-900/20 border border-red-700 rounded-lg p-8 text-center">
+                <p className="text-red-400 text-lg mb-2">❌ No 3D Model Available</p>
+                <p className="text-slate-400 text-sm">This product doesn't have a 3D model for try-on.</p>
+              </div>
+            )}
           </ARErrorBoundary>
           
           <div className="mt-4 text-center">

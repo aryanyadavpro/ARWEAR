@@ -12,7 +12,8 @@ interface RouteContext {
 // GET /api/products/[id] - Get single product by ID
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const { id } = context.params
+    const params = await context.params
+    const { id } = params
     
     if (!id) {
       return NextResponse.json({
@@ -67,7 +68,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
 // PUT /api/products/[id] - Update product
 export async function PUT(request: NextRequest, context: RouteContext) {
   try {
-    const { id } = context.params
+    const params = await context.params
+    const { id } = params
     
     if (!id) {
       return NextResponse.json({
@@ -134,7 +136,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 // DELETE /api/products/[id] - Delete product
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const { id } = context.params
+    const params = await context.params
+    const { id } = params
     
     if (!id) {
       return NextResponse.json({
